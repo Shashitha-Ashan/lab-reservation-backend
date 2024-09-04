@@ -11,11 +11,12 @@ const UserSchema = new mongoose.Schema({
   },
   isVerified: { type: Boolean, default: false, required: true },
   academicYear: { type: String },
+  department: { type: String, enum: ["ict", "egt", "bst"] },
 });
 
 UserSchema.methods.generateAuthToken = function () {
   const token = jwt.sign({ _id: this._id }, process.env.JWT_SECRET);
   return token;
 };
-
-module.exports = mongoose.model("User", UserSchema);
+const User = mongoose.model("User", UserSchema);
+module.exports = User;

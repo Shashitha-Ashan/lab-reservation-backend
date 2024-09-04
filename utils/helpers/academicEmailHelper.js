@@ -21,5 +21,17 @@ const getAcademicYear = (email) => {
   }
   return null;
 };
+const getDepartment = (email) => {
+  const emailParts = email.split("@");
+  if (emailParts[1] === "fot.sjp.ac.lk") {
+    return emailParts[0].substring(0, 2);
+  }
+  return null;
+};
 
-module.exports = { isUniversityEmail, isStudentEmail, getAcademicYear };
+module.exports = {
+  isUniversityEmail,
+  isStudentEmail,
+  getAcademicYear,
+  getDepartment,
+};

@@ -1,10 +1,27 @@
+const TimeTableSlot = require("../models/timeTableSlotModel");
+const Hall = require("../models/hallModel");
+const RescheduleModule = require("../models/rescheduleModuleModel");
+const Module = require("../models/moduleModel");
+
 const getTodayTimeSlots = async (req, res) => {
   try {
     const today = new Date();
     const todayDate = today.toISOString().split("T")[0];
-    const timeSlots = await TimeSlot.find({ date: todayDate });
 
-    res.status(200).json({ timeSlots });
+    if (req.user.role === "student") {
+      const timeSlots = await TimeTableSlot.find({
+        date: todayDate,
+        module: { academicYear: req.user.academicYear },
+      });
+      return res.status(200).json({ timeSlots });
+    }
+    if (req.user.role === "lecturer") {
+      const timeSlots = await TimeTableSlot.find({
+        date: todayDate,
+        lecturer: req.user._id,
+      });
+      return res.status(200).json({ timeSlots });
+    }
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
@@ -133,8 +150,10 @@ const cancelTimeSlot = async (req, res) => {
 const searchFreeSlots = async (req, res) => {
   try {
     const { date, startTime, endTime, capacity } = req.body;
-    const timeSlots = await TimeSlot.find({
-      date: { $eq: date, $gte: startTime, $lte: endTime },
+    const timeSlots = await TimeTableSlot.find({
+      date: date,
+      startTime: { $gte: startTime, $lte: endTime },
+      endTime: { $gte: startTime, $lte: endTime },
     });
 
     const bookedHalls = timeSlots.map((timeSlot) => timeSlot.hall);
@@ -143,6 +162,72 @@ const searchFreeSlots = async (req, res) => {
       _id: { $nin: bookedHalls, NO_seats: { $gte: capacity } },
     });
     res.status(200).json({ avaiable: freeHalls });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+const getSelectedDateTimeSlots = async (req, res) => {
+  try {
+    const { selectedDate } = req.body;
+    const timestamp = Date.parse(selectedDate);
+    const date = new Date(timestamp);
+
+    if (req.user.role === "student") {
+      const timeSlots = await TimeTableSlot.find({
+        date: date,
+        module: { academicYear: req.user.academicYear },
+      });
+      return res.status(200).json({ timeSlots });
+    }
+    if (req.user.role === "lecturer") {
+      const timeSlots = await TimeTableSlot.find({
+        date: date,
+        lecturer: req.user._id,
+      });
+      return res.status(200).json({ timeSlots });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+const getRescheduleModules = async (req, res) => {
+  try {
+    if (req.user.role === "student") {
+      const timeSlots = await TimeTableSlot.find({
+        slot_type: "rescheduled",
+        module: { academicYear: req.user.academicYear },
+      });
+      return res.status(200).json({ timeSlots });
+    }
+    if (req.user.role === "lecturer") {
+      const timeSlots = await TimeTableSlot.find({
+        slot_type: "rescheduled",
+        lecturer: req.user._id,
+      });
+      return res.status(200).json({ timeSlots });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+const addExtraLecture = async (req, res) => {
+  try {
+    const { date, start_time, end_time, module, hall } = req.body;
+    const newTimeSlot = new TimeTableSlot({
+      date,
+      start_time,
+      end_time,
+      module,
+      lecturer: req.user._id,
+      hall,
+      slot_type: "extra",
+    });
+    await newTimeSlot.save();
+
+    res.status(201).json({ message: "Extra lecture added successfully" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
@@ -157,4 +242,7 @@ module.exports = {
   rescheduleTimeSlot,
   cancelTimeSlot,
   searchFreeSlots,
+  getSelectedDateTimeSlots,
+  getRescheduleModules,
+  addExtraLecture,
 };

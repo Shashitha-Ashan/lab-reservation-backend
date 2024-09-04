@@ -1,12 +1,12 @@
-const User = require("../models/User");
+const User = require("../models/userModel");
 const bcrypt = require("bcrypt");
-const User = require("../models/User");
 
 // Helper functions
 const {
   isUniversityEmail,
   isStudentEmail,
   getAcademicYear,
+  getDepartment,
 } = require("../utils/helpers");
 
 // Register function
@@ -31,11 +31,14 @@ const register = async (req, res) => {
       password: hashedPassword,
       role: isStudentEmail(email) ? "student" : "lecturer",
       academicYear: getAcademicYear(email),
+      department: getDepartment(email),
     });
 
     await user.save();
 
-    res.status(201).json({ message: "User registered successfully" });
+    res
+      .status(201)
+      .json({ message: "User registered successfully please verify email" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
@@ -103,16 +106,40 @@ const getUsercredintials = async (req, res) => {
   res.status(500).json({ message: "Internal server error" });
 };
 const verifyUser = async (req, res) => {
-  if (req.user.role === "student" || req.user.role === "lecturer") {
-    return res.status(403).json({ message: "Forbidden" });
-  } else {
-    try {
-      const { id } = req.body;
-      const user = await User.findByIdAndUpdate(id, { isVerified: true });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: "Internal server error" });
+  try {
+    const { id } = req.body;
+    const user = await User.findByIdAndUpdate(id, { isVerified: true });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+const addUserFromAdmin = async (req, res) => {
+  try {
+    const { name, email, role, academicYear } = req.body;
+    if (!isUniversityEmail(email)) {
+      return res.status(400).json({ message: "Invalid email" });
     }
+    if (
+      await User.findOne({
+        uniEmail: email,
+      })
+    ) {
+      return res.status(400).json({ message: "User already exists" });
+    }
+    const user = new User({
+      name,
+      uniEmail: email,
+      role,
+      academicYear,
+    });
+
+    await user.save();
+
+    res.status(201).json({ message: "User added successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 module.exports = {
@@ -121,4 +148,5 @@ module.exports = {
   updateProfile,
   getUsercredintials,
   verifyUser,
+  addUserFromAdmin,
 };
