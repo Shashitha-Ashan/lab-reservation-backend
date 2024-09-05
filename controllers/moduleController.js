@@ -1,27 +1,26 @@
+const Module = require("../models/moduleModel");
+
 const addNewModule = async (req, res) => {
   const {
     moduleCode,
     moduleName,
-    moduleType,
     semester,
     academicYear,
     NOHours,
+    department,
   } = req.body;
-
-  // Check if moduleCode already exists
   const existingModule = await Module.findOne({ moduleCode });
   if (existingModule) {
     return res.status(409).json({ message: "Module already exists" });
   }
 
-  // Create a new module
   const newModule = new Module({
     moduleCode,
     moduleName,
-    moduleType,
     semester,
     academicYear,
     NOHours,
+    department,
   });
 
   try {
@@ -51,10 +50,10 @@ const updateModule = async (req, res) => {
   const {
     moduleCode,
     moduleName,
-    moduleType,
     semester,
     academicYear,
     NOHours,
+    department,
   } = req.body;
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(404).send("No module with that id");
@@ -67,10 +66,10 @@ const updateModule = async (req, res) => {
   const updatedModule = {
     moduleCode,
     moduleName,
-    moduleType,
     semester,
     academicYear,
     NOHours,
+    department,
     _id: id,
   };
   await Module.findByIdAndUpdate(id, updatedModule, { new: true });

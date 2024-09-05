@@ -7,7 +7,7 @@ const {
   isStudentEmail,
   getAcademicYear,
   getDepartment,
-} = require("../utils/helpers");
+} = require("../utils/helpers/academicEmailHelper");
 
 // Register function
 const register = async (req, res) => {
@@ -49,8 +49,7 @@ const register = async (req, res) => {
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ uniEmail: email });
 
     if (!user) {
       return res.status(401).json({ message: "Invalid email or password" });
@@ -95,9 +94,9 @@ const getUsercredintials = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const { name, uniEmail, role, academicYear } = user;
+    const { name, uniEmail, role, academicYear, department } = user;
 
-    res.status(200).json({ name, uniEmail, role, academicYear });
+    res.status(200).json({ name, uniEmail, role, academicYear, department });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });

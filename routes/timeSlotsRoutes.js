@@ -11,9 +11,9 @@ const {
   getRescheduleModules,
   addExtraLecture,
 } = require("../controllers/timeSlotsController");
-const verifyToken = require("../middleware/verifyToken");
-const isLecturer = require("../middleware/isLecturer");
-const isAdmin = require("../middleware/isAdmin");
+const verifyToken = require("../middlewares/verifyToken");
+const isLecturer = require("../middlewares/verifyLecturer");
+const { isAdmin } = require("../middlewares/verifyAdmin");
 router.use(verifyToken);
 
 router.get("/today", getTodayTimeSlots);
@@ -22,7 +22,7 @@ router.delete("/delete/:id", isAdmin, deleteTimeSlot);
 router.put("/edit/:id", isAdmin, editTimeSlot);
 router.put("/reschedule/:id", isLecturer, rescheduleTimeSlot);
 router.put("/cancel/:id", isLecturer, cancelTimeSlot);
-router.post("/selected", getSelectedDateTimeSlots);
+router.get("/selectedate", getSelectedDateTimeSlots);
 router.get("/reschedule", getRescheduleModules);
 router.post("/add-extra", isLecturer, addExtraLecture);
 

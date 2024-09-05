@@ -1,7 +1,10 @@
 const TimeTableSlot = require("../models/timeTableSlotModel");
 const Hall = require("../models/hallModel");
-const RescheduleModule = require("../models/rescheduleModuleModel");
+const RescheduleModule = require("../models/reschaduleModule");
 const Module = require("../models/moduleModel");
+const {
+  getYearByStudentAcademicYear,
+} = require("../utils/helpers/academicYearHelper");
 
 const getTodayTimeSlots = async (req, res) => {
   try {
@@ -9,11 +12,24 @@ const getTodayTimeSlots = async (req, res) => {
     const todayDate = today.toISOString().split("T")[0];
 
     if (req.user.role === "student") {
+      const studentYear = await getYearByStudentAcademicYear(
+        req.user.academicYear
+      );
       const timeSlots = await TimeTableSlot.find({
         date: todayDate,
-        module: { academicYear: req.user.academicYear },
-      });
-      return res.status(200).json({ timeSlots });
+      })
+        .populate({
+          path: "module",
+          match: {
+            year: studentYear,
+            department: req.user.department,
+          },
+        })
+        .exec();
+      const filteredTimeSlots = timeSlots.filter(
+        (slot) => slot.module !== null
+      );
+      return res.status(200).json({ timeSlots: filteredTimeSlots });
     }
     if (req.user.role === "lecturer") {
       const timeSlots = await TimeTableSlot.find({
@@ -29,43 +45,51 @@ const getTodayTimeSlots = async (req, res) => {
 };
 
 const addTimeSlot = async (req, res) => {
-  if (req.user.role === "student" || req.user.role === "lecturer") {
-    return res.status(403).json({ message: "Forbidden" });
-  } else {
-    try {
-      const { startDate, start_time, end_time, module, lecturer, hall } =
-        req.body;
-      startDate = new Date(startDate);
-      const moduleNumberOfHours = getModuleNumberOfHours(module);
-      const timeSlotDuration = new Date(end_time) - new Date(start_time);
-      const numberOfWeeks = moduleNumberOfHours / timeSlotDuration;
+  try {
+    let {
+      startDate,
+      start_time,
+      end_time,
+      module,
+      lecturer,
+      hall,
+      sessionType,
+    } = req.body;
+    startDate = new Date(startDate);
+    start_time = new Date(start_time);
+    end_time = new Date(end_time);
 
-      for (let i = 0; i < numberOfWeeks; i++) {
-        const date = new Date(startDate);
-        date.setDate(date.getDate() + i * 7);
-        const newTimeSlot = new TimeSlot({
-          date,
-          start_time,
-          end_time,
-          module,
-          lecturer,
-          hall,
-          slot_type: "ordinary",
-        });
-        await newTimeSlot.save();
-      }
+    const moduleNumberOfHours = await getModuleNumberOfHours(module);
+    const timeSlotDuration = (end_time - start_time) / (1000 * 60 * 60);
+    const numberOfWeeks = Math.ceil(moduleNumberOfHours / timeSlotDuration);
 
-      res.status(201).json({ message: "Time slot added successfully" });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: "Internal server error" });
-    }
+    const dates = Array.from({ length: numberOfWeeks }, (_, i) => {
+      const date = new Date(startDate);
+      date.setDate(startDate.getDate() + i * 7);
+      return date.toISOString().split("T")[0];
+    });
+
+    const timeSlots = dates.map((date) => ({
+      date,
+      start_time: date + "T" + start_time.toISOString().split("T")[1],
+      end_time: date + "T" + end_time.toISOString().split("T")[1],
+      module,
+      lecturer,
+      hall,
+      slot_type: "ordinary",
+      sessionType,
+    }));
+    await TimeTableSlot.insertMany(timeSlots);
+    res.status(201).json({ message: "Time slot added successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 const getModuleNumberOfHours = async (id) => {
   try {
     const module = await Module.findById(id);
-    module.NO_hours;
+    return module.NOHours;
   } catch (error) {
     console.error(error);
   }
@@ -152,8 +176,7 @@ const searchFreeSlots = async (req, res) => {
     const { date, startTime, endTime, capacity } = req.body;
     const timeSlots = await TimeTableSlot.find({
       date: date,
-      startTime: { $gte: startTime, $lte: endTime },
-      endTime: { $gte: startTime, $lte: endTime },
+      $or: [{ start_time: { $lt: endTime }, end_time: { $gt: startTime } }],
     });
 
     const bookedHalls = timeSlots.map((timeSlot) => timeSlot.hall);
@@ -170,20 +193,30 @@ const searchFreeSlots = async (req, res) => {
 const getSelectedDateTimeSlots = async (req, res) => {
   try {
     const { selectedDate } = req.body;
-    const timestamp = Date.parse(selectedDate);
-    const date = new Date(timestamp);
-
+    const date = selectedDate;
     if (req.user.role === "student") {
+      const studentYear = await getYearByStudentAcademicYear(
+        req.user.academicYear
+      );
       const timeSlots = await TimeTableSlot.find({
         date: date,
-        module: { academicYear: req.user.academicYear },
-      });
-      return res.status(200).json({ timeSlots });
+      })
+        .populate({
+          path: "module",
+          match: {
+            year: studentYear,
+            department: req.user.department,
+          },
+        })
+        .exec();
+      const filteredTimeSlots = timeSlots.filter((slot) => slot.module != null);
+
+      return res.status(200).json({ timeSlots: filteredTimeSlots });
     }
     if (req.user.role === "lecturer") {
       const timeSlots = await TimeTableSlot.find({
         date: date,
-        lecturer: req.user._id,
+        lecturer: req.user.id,
       });
       return res.status(200).json({ timeSlots });
     }
@@ -197,9 +230,19 @@ const getRescheduleModules = async (req, res) => {
     if (req.user.role === "student") {
       const timeSlots = await TimeTableSlot.find({
         slot_type: "rescheduled",
-        module: { academicYear: req.user.academicYear },
-      });
-      return res.status(200).json({ timeSlots });
+      })
+        .populate({
+          path: "module",
+          match: {
+            academicYear: req.user.academicYear,
+            department: req.user.department,
+          },
+        })
+        .exec();
+      const filteredTimeSlots = timeSlots.filter(
+        (slot) => slot.module !== null
+      );
+      return res.status(200).json({ timeSlots: filteredTimeSlots });
     }
     if (req.user.role === "lecturer") {
       const timeSlots = await TimeTableSlot.find({

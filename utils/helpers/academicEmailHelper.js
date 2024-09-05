@@ -24,7 +24,7 @@ const getAcademicYear = (email) => {
 const getDepartment = (email) => {
   const emailParts = email.split("@");
   if (emailParts[1] === "fot.sjp.ac.lk") {
-    return emailParts[0].substring(0, 2);
+    return emailParts[0].substring(0, 3).toLowerCase();
   }
   return null;
 };

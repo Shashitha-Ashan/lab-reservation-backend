@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const verifyToken = require("../middleware/verifyToken");
+const verifyToken = require("../middlewares/verifyToken");
 const {
   login,
   register,
@@ -8,6 +8,7 @@ const {
   verifyUser,
   addUserFromAdmin,
 } = require("../controllers/userController");
+const { isAdmin } = require("../middlewares/verifyAdmin");
 
 router.post("/register", register);
 router.post("/login", login);

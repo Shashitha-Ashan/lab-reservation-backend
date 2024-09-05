@@ -21,7 +21,15 @@ const dotenv = require("dotenv");
 // });
 
 const app = express();
+// app.set("trust proxy", true);
 
+// app.use((req, res, next) => {
+//   if (req.secure) {
+//     next();
+//   } else {
+//     res.redirect(`https://${req.headers.host}${req.url}`);
+//   }
+// });
 //Middleware Functions
 app.use(bodyParser.json());
 app.use(cors());
@@ -33,6 +41,7 @@ app.use("/api/v1/time-slots", require("./routes/timeSlotsRoutes"));
 app.use("/api/v1/modules", require("./routes/moduleRoutes"));
 app.use("/api/v1/device", require("./routes/deviceIdRoutes"));
 app.use("/api/v1/halls", require("./routes/hallsRoutes"));
+app.use("/api/v1/academic-year", require("./routes/academicYearRoutes"));
 
 dotenv.config();
 

@@ -1,9 +1,20 @@
 const mongoose = require("mongoose");
 
 const TimeTableSlotSchema = new mongoose.Schema({
-  date: { type: Date, required: true },
-  start_time: { type: Date, required: true },
-  end_time: { type: Date, required: true },
+  date: { type: String, required: true },
+  start_time: { type: String, required: true },
+  end_time: {
+    type: String,
+    required: true,
+    validate: {
+      validator: function (value) {
+        const endTime = new Date(value);
+        const startTime = new Date(this.start_time);
+        return endTime > startTime;
+      },
+      message: "Start time must be before end time",
+    },
+  },
   module: { type: mongoose.Types.ObjectId, ref: "Module", required: true },
   lecturer: { type: mongoose.Types.ObjectId, ref: "Lecturer", required: true },
   hall: { type: mongoose.Types.ObjectId, ref: "LectureHall", required: true },

@@ -4,14 +4,14 @@ const { isAdmin } = require("../middlewares/verifyAdmin");
 
 const {
   getHalls,
-  createHall,
+  addHall,
   updateHall,
   deleteHall,
 } = require("../controllers/hallsController");
 router.use(isAdmin);
 
 router.get("/", getHalls);
-router.post("/", createHall);
+router.post("/", addHall);
 router.patch("/:id", updateHall);
 router.delete("/:id", deleteHall);
 

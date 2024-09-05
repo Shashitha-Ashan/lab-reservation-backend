@@ -1,11 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const verifyToken = require("../middleware/verifyToken");
-const isAdmin = require("../middleware/isAdmin");
+const verifyToken = require("../middlewares/verifyToken");
+const { isAdmin } = require("../middlewares/verifyAdmin");
 const {
   getModules,
-  getModule,
-  createModule,
+  addNewModule,
   updateModule,
   deleteModule,
 } = require("../controllers/moduleController");
@@ -14,8 +13,7 @@ router.use(verifyToken);
 router.use(isAdmin);
 
 router.get("/", getModules);
-router.get("/:id", getModule);
-router.post("/", createModule);
+router.post("/", addNewModule);
 router.post("/:id", updateModule);
 router.delete("/:id", deleteModule);
 
