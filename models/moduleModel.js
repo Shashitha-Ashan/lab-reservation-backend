@@ -14,8 +14,16 @@ const ModuleSchema = new mongoose.Schema({
     required: true,
   },
   NOHours: { type: Number, required: true },
-  department: { type: String, required: true, enum: ["ict", "egt", "bst"] },
-  focusArea: { type: String, required: true, default: "common" },
+  department: {
+    type: mongoose.Types.ObjectId,
+    ref: "Department",
+    required: true,
+  },
+  focusArea: {
+    type: mongoose.Types.ObjectId,
+    ref: "FocusArea",
+    required: true,
+  },
 });
 
 module.exports = mongoose.model("Module", ModuleSchema);

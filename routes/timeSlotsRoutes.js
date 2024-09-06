@@ -10,6 +10,7 @@ const {
   getSelectedDateTimeSlots,
   getRescheduleModules,
   addExtraLecture,
+  cancelRangeOfTimeSlots,
 } = require("../controllers/timeSlotsController");
 const verifyToken = require("../middlewares/verifyToken");
 const isLecturer = require("../middlewares/verifyLecturer");
@@ -25,5 +26,6 @@ router.put("/cancel/:id", isLecturer, cancelTimeSlot);
 router.get("/selectedate", getSelectedDateTimeSlots);
 router.get("/reschedule", getRescheduleModules);
 router.post("/add-extra", isLecturer, addExtraLecture);
+router.put("/cancel/range", isLecturer, cancelRangeOfTimeSlots);
 
 module.exports = router;
