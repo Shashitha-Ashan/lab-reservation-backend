@@ -27,12 +27,18 @@ const getTodayTimeSlots = async (req, res) => {
           path: "module",
           match: {
             year: studentYear,
-            department: req.user.department,
+          },
+          populate: {
+            path: "department",
+            match: { name: req.user.department },
+            select: "name",
           },
         })
+        .populate({ path: "lecturer", select: "name" })
+        .populate({ path: "hall", select: "hallName" })
         .exec();
       const filteredTimeSlots = timeSlots.filter(
-        (slot) => slot.module !== null
+        (slot) => slot.module !== null && slot.module.department !== null
       );
       return res.status(200).json({ timeSlots: filteredTimeSlots });
     }
@@ -175,7 +181,7 @@ const cancelTimeSlot = async (req, res) => {
     const timeSlot = await TimeTableSlot.findById(id);
     timeSlot.slot_type = "cancelled";
     await timeSlot.save();
-    // await sendCancellationNotificationToStudents(timeSlot.module);
+    // await sendCancellationNotificationToStudents(timeSlot);
     res.status(200).json({ message: "Time slot cancelled successfully" });
   } catch (error) {
     console.error(error);
@@ -184,16 +190,40 @@ const cancelTimeSlot = async (req, res) => {
 };
 const searchFreeSlots = async (req, res) => {
   try {
-    const { date, startTime, endTime, capacity } = req.body;
+    let { date, startTime, endTime, capacity, slotType } = req.body;
+    if (!date || !startTime || !endTime || !capacity || !slotType) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+    slotType = slotType.toLowerCase();
+    const startDateTime = new Date(date + "T" + startTime.split("T")[1]);
+    const endDateTime = new Date(date + "T" + endTime.split("T")[1]);
+
+    if (isNaN(startDateTime.getTime()) || isNaN(endDateTime.getTime())) {
+      return res.status(400).json({ message: "Invalid date/time format" });
+    }
+
+    if (startDateTime > endDateTime) {
+      return res
+        .status(400)
+        .json({ message: "Start time must be before end time" });
+    }
+    const startTimeISO = startDateTime.toISOString();
+    const endTimeISO = endDateTime.toISOString();
+
     const timeSlots = await TimeTableSlot.find({
       date: date,
-      $or: [{ start_time: { $lt: endTime }, end_time: { $gt: startTime } }],
+      $or: [
+        { start_time: { $lt: endTimeISO }, end_time: { $gt: startTimeISO } },
+      ],
+      $or: [{ slot_type: "ordinary" }, { slot_type: "extra" }],
     });
 
     const bookedHalls = timeSlots.map((timeSlot) => timeSlot.hall);
 
     const freeHalls = await Hall.find({
-      _id: { $nin: bookedHalls, NO_seats: { $gte: capacity } },
+      _id: { $nin: bookedHalls },
+      NOSeats: { $gte: capacity },
+      hallType: slotType,
     });
     res.status(200).json({ avaiable: freeHalls });
   } catch (error) {
@@ -216,11 +246,20 @@ const getSelectedDateTimeSlots = async (req, res) => {
           path: "module",
           match: {
             year: studentYear,
-            department: req.user.department,
+          },
+          select: { moduleCode: 1, moduleName: 1 },
+          populate: {
+            path: "department",
+            match: { name: req.user.department },
+            select: "name",
           },
         })
+        .populate({ path: "lecturer", select: "name" })
+        .populate({ path: "hall", select: "hallName" })
         .exec();
-      const filteredTimeSlots = timeSlots.filter((slot) => slot.module != null);
+      const filteredTimeSlots = timeSlots.filter(
+        (slot) => slot.module !== null && slot.module.department !== null
+      );
 
       return res.status(200).json({ timeSlots: filteredTimeSlots });
     }

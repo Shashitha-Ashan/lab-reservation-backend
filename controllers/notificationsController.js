@@ -1,6 +1,6 @@
 const User = require("../models/userModel");
 const Module = require("../models/moduleModel");
-const DeviceId = require("../models/deviceIdModel");
+const DeviceId = require("../models/deviceIdsModel");
 const {
   sendBulkNotification,
 } = require("../utils/helpers/sendNotificationHelper");

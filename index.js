@@ -3,6 +3,9 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const connectDB = require("./db");
 const dotenv = require("dotenv");
+dotenv.config();
+
+const verifyToken = require("./middlewares/verifyToken");
 // const { initializeApp } = require("firebase-admin/app");
 
 // initializeApp({
@@ -32,22 +35,40 @@ const app = express();
 // });
 //Middleware Functions
 app.use(bodyParser.json());
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL,
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use("/api/v1/user", require("./routes/userRoutes"));
-app.use("/api/v1/time-slots", require("./routes/timeSlotsRoutes"));
-app.use("/api/v1/modules", require("./routes/moduleRoutes"));
-app.use("/api/v1/device", require("./routes/deviceIdRoutes"));
-app.use("/api/v1/halls", require("./routes/hallsRoutes"));
-app.use("/api/v1/academic-year", require("./routes/academicYearRoutes"));
-
-dotenv.config();
-
 //Connect to DB
 connectDB();
+//Routes
+app.use("/api/v1/user", require("./routes/userRoutes"));
+app.use("/api/v1/time-slots", verifyToken, require("./routes/timeSlotsRoutes"));
+app.use("/api/v1/modules", verifyToken, require("./routes/moduleRoutes"));
+app.use("/api/v1/device", verifyToken, require("./routes/deviceIdRoutes"));
+app.use("/api/v1/halls", verifyToken, require("./routes/hallsRoutes"));
+app.use(
+  "/api/v1/academic-year",
+  verifyToken,
+  require("./routes/academicYearRoutes")
+);
+app.use(
+  "/api/v1/department",
+  verifyToken,
+  require("./routes/departmentRoutes")
+);
+app.use("/api/v1/focus-area", verifyToken, require("./routes/focusAreaRoutes"));
 
-const PORT = process.env.PORT || 3000;
+// test route
+app.get("/", (req, res) => {
+  res.send("Hello World!");
+});
 
-app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
+app.listen(process.env.PORT || 3000, () =>
+  console.log(`Server listening on port ${process.env.PORT}`)
+);

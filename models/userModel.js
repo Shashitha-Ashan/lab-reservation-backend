@@ -24,6 +24,14 @@ const UserSchema = new mongoose.Schema({
       return this.role === "student";
     },
   },
+  focusArea: {
+    type: mongoose.Types.ObjectId,
+    ref: "FocusArea",
+    default: null,
+    required: function () {
+      return this.role === "student";
+    },
+  },
 });
 
 UserSchema.methods.generateAuthToken = function () {
@@ -36,7 +44,8 @@ UserSchema.methods.generateAuthToken = function () {
       email: this.uniEmail,
       academicYear: this.academicYear,
     },
-    process.env.JWT_SECRET
+    process.env.JWT_SECRET,
+    { expiresIn: "7d" }
   );
   return token;
 };

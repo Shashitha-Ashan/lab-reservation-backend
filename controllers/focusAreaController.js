@@ -1,14 +1,14 @@
-const FocusArea = require("../models/FocusArea");
+const FocusArea = require("../models/focusAreaModel");
 const mongoose = require("mongoose");
 
 const addNewFocusArea = async (req, res) => {
   const { focusAreaName, departmentId } = req.body;
-  const existingFocusArea = await FocusArea.findOne({ focusAreaName });
+  const existingFocusArea = await FocusArea.findOne({ name: focusAreaName });
   if (existingFocusArea) {
     return res.status(409).json({ message: "Focus area already exists" });
   }
   const newFocusArea = new FocusArea({
-    focusAreaName,
+    name: focusAreaName,
     department: departmentId,
   });
   try {

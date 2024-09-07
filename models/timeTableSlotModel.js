@@ -16,7 +16,7 @@ const TimeTableSlotSchema = new mongoose.Schema({
     },
   },
   module: { type: mongoose.Types.ObjectId, ref: "Module", required: true },
-  lecturer: { type: mongoose.Types.ObjectId, ref: "Lecturer", required: true },
+  lecturer: { type: mongoose.Types.ObjectId, ref: "User", required: true },
   hall: { type: mongoose.Types.ObjectId, ref: "LectureHall", required: true },
   slot_type: {
     type: String,

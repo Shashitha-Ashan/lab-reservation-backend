@@ -1,15 +1,16 @@
 const express = require("express");
 const router = express.Router();
+const { isAdmin } = require("../middlewares/verifyAdmin");
 
 const {
-  addNewDepartment,
+  createDepartment,
   deleteDepartment,
-  getDepartments,
+  getAllDepartments,
   updateDepartment,
 } = require("../controllers/departmentController");
-
-router.get("/", getDepartments);
-router.post("/", addNewDepartment);
+router.use(isAdmin);
+router.get("/", getAllDepartments);
+router.post("/", createDepartment);
 router.put("/:id", updateDepartment);
 router.delete("/:id", deleteDepartment);
 

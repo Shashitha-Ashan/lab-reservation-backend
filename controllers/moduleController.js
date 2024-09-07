@@ -9,6 +9,7 @@ const addNewModule = async (req, res) => {
     NOHours,
     department,
     focusArea,
+    year,
   } = req.body;
   const existingModule = await Module.findOne({ moduleCode });
   if (existingModule) {
@@ -23,6 +24,7 @@ const addNewModule = async (req, res) => {
     NOHours,
     department,
     focusArea,
+    year,
   });
 
   try {

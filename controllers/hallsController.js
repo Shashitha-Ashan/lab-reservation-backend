@@ -2,10 +2,11 @@ const mongoose = require("mongoose");
 const Hall = require("../models/hallModel");
 
 const addHall = async (req, res) => {
-  const { hallName, NOSeats } = req.body;
+  const { hallName, NOSeats, hallType } = req.body;
   const newHall = new Hall({
     hallName,
     NOSeats,
+    hallType,
   });
   try {
     await newHall.save();

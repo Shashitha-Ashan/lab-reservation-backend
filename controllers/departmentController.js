@@ -1,3 +1,5 @@
+const Department = require("../models/departmentModel");
+
 const getAllDepartments = async (req, res) => {
   try {
     const departments = await Department.find();
@@ -17,11 +19,11 @@ const getDepartmentById = async (req, res) => {
 
 const createDepartment = async (req, res) => {
   const { departmentName } = req.body;
-  const existingDepartment = await Department.findOne({ departmentName });
+  const existingDepartment = await Department.findOne({ name: departmentName });
   if (existingDepartment) {
     return res.status(409).json({ message: "Department already exists" });
   }
-  const newDepartment = new Department({ departmentName });
+  const newDepartment = new Department({ name: departmentName });
   try {
     await newDepartment.save();
     res.status(201).json({ message: "Department added successfully" });
