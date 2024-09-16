@@ -67,4 +67,21 @@ const getUsercredintials = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-module.exports = { login, addAdmin, removeAdmin, getUsercredintials };
+const selfRegister = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const admin = new Admin({ email, password: hashedPassword, role: "admin" });
+    await admin.save();
+    res.json({ message: "Admin added successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+module.exports = {
+  login,
+  addAdmin,
+  removeAdmin,
+  getUsercredintials,
+  selfRegister,
+};

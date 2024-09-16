@@ -6,6 +6,7 @@ const {
   addAdmin,
   removeAdmin,
   getUsercredintials,
+  selfRegister,
 } = require("../controllers/adminController");
 
 const verifyToken = require("../middlewares/verifyToken");
@@ -16,5 +17,6 @@ router.post("/login", login);
 router.post("/add", verifyToken, superAdmin, addAdmin);
 router.delete("/remove", verifyToken, superAdmin, removeAdmin);
 router.get("/profile", verifyToken, isAdmin, getUsercredintials);
+router.post("/selfregister", selfRegister);
 
 module.exports = router;
