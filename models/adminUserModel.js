@@ -16,6 +16,11 @@ const adminUserSchema = new mongoose.Schema({
     required: true,
     enum: ["admin", "superadmin"],
   },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+  },
 });
 
 module.exports = mongoose.model("AdminUser", adminUserSchema);
