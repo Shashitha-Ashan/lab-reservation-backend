@@ -22,7 +22,6 @@ const ModuleSchema = new mongoose.Schema({
   focusArea: {
     type: mongoose.Types.ObjectId,
     ref: "FocusArea",
-    required: true,
   },
 });
 

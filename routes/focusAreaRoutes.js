@@ -6,10 +6,12 @@ const {
   deleteFocusArea,
   getFocusAreas,
   updateFocusArea,
+  getAllFocusAreas,
 } = require("../controllers/focusAreaController");
 
 router.use(isAdmin);
-router.get("/", getFocusAreas);
+router.get("/:id", getFocusAreas);
+router.get("/", getAllFocusAreas);
 router.post("/", addNewFocusArea);
 router.put("/:id", updateFocusArea);
 router.delete("/:id", deleteFocusArea);

@@ -1,5 +1,6 @@
 const User = require("../models/userModel");
 const bcrypt = require("bcrypt");
+const sendConfirmationEmail = require("../utils/services/emailService");
 
 // Helper functions
 const {
@@ -35,7 +36,7 @@ const register = async (req, res) => {
     });
 
     await user.save();
-
+    await sendConfirmationEmail(user.uniEmail, user.generateEmailToken());
     res
       .status(201)
       .json({ message: "User registered successfully please verify email" });
@@ -88,7 +89,7 @@ const updateProfile = async (req, res) => {
 
 const getUsercredintials = async (req, res) => {
   try {
-    const user = await User.findOne({ _id: req.user._id });
+    const user = await User.findOne({ _id: req.user.id });
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -101,18 +102,38 @@ const getUsercredintials = async (req, res) => {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
   }
-  console.error(error);
-  res.status(500).json({ message: "Internal server error" });
 };
 const verifyUser = async (req, res) => {
   try {
     const { id } = req.body;
-    const user = await User.findByIdAndUpdate(id, { isVerified: true });
+    await User.findByIdAndUpdate(id, { adminConfirmation: true });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
+const userConfirmation = async (req, res) => {
+  try {
+    if (!req.params.token) {
+      return res.status(400).json({ message: "Invalid token" });
+    }
+    const { token } = req.params;
+    const decoded = User.userVerify(token);
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    if (user.isVerified) {
+      return res.status(400).json({ message: "User already verified" });
+    }
+    await User.findByIdAndUpdate(decoded.id, { isVerified: true });
+    res.status(200).send("User verified successfully");
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 const addUserFromAdmin = async (req, res) => {
   try {
     const { name, email, role, academicYear } = req.body;
@@ -141,6 +162,28 @@ const addUserFromAdmin = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+const getUsers = async (req, res) => {
+  try {
+    const projectionFields = {
+      adminConfirmation: 1,
+      focusArea: 1,
+      _id: 1,
+      name: 1,
+      uniEmail: 1,
+      role: 1,
+      isVerified: 1,
+      academicYear: 1,
+      department: 1,
+    };
+
+    const users = await User.find({}, projectionFields);
+
+    res.status(200).json({ users });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
 module.exports = {
   register,
   login,
@@ -148,4 +191,6 @@ module.exports = {
   getUsercredintials,
   verifyUser,
   addUserFromAdmin,
+  userConfirmation,
+  getUsers,
 };

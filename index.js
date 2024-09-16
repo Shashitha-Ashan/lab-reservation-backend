@@ -52,6 +52,7 @@ app.use("/api/v1/time-slots", verifyToken, require("./routes/timeSlotsRoutes"));
 app.use("/api/v1/modules", verifyToken, require("./routes/moduleRoutes"));
 app.use("/api/v1/device", verifyToken, require("./routes/deviceIdRoutes"));
 app.use("/api/v1/halls", verifyToken, require("./routes/hallsRoutes"));
+app.use("/api/v1/admin", require("./routes/adminRoutes"));
 app.use(
   "/api/v1/academic-year",
   verifyToken,

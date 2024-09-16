@@ -3,6 +3,7 @@ const Hall = require("../models/hallModel");
 
 const addHall = async (req, res) => {
   const { hallName, NOSeats, hallType } = req.body;
+  console.log(req.body);
   const newHall = new Hall({
     hallName,
     NOSeats,

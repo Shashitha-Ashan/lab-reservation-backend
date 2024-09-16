@@ -50,10 +50,29 @@ const getFocusAreas = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+const getAllFocusAreas = async (req, res) => {
+  try {
+    const focusAreas = await FocusArea.find().populate(
+      "department",
+      (select = "name")
+    );
+    const sendData = focusAreas.map((focusArea) => {
+      return {
+        id: focusArea._id,
+        name: focusArea.name,
+        department: focusArea.department.name,
+      };
+    });
+    res.json(sendData);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
 module.exports = {
   addNewFocusArea,
   updateFocusArea,
   deleteFocusArea,
   getFocusAreas,
+  getAllFocusAreas,
 };

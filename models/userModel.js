@@ -7,7 +7,7 @@ const UserSchema = new mongoose.Schema({
   password: { type: String, required: true },
   role: {
     type: String,
-    enum: ["admin", "lecturer", "student", "demonstrator"],
+    enum: ["lecturer", "student", "demonstrator"],
     required: true,
   },
   isVerified: { type: Boolean, default: false, required: true },
@@ -22,6 +22,13 @@ const UserSchema = new mongoose.Schema({
     enum: ["ict", "egt", "bst"],
     required: function () {
       return this.role === "student";
+    },
+  },
+  adminConfirmation: {
+    type: Boolean,
+    default: false,
+    required: function () {
+      return this.role === "lecturer" || this.role === "demonstrator";
     },
   },
   focusArea: {
@@ -50,5 +57,15 @@ UserSchema.methods.generateAuthToken = function () {
   return token;
 };
 
+UserSchema.methods.generateEmailToken = function () {
+  const token = jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
+    expiresIn: "1h",
+  });
+  return token;
+};
+UserSchema.methods.userVerify = function (token) {
+  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+  return decoded;
+};
 const User = mongoose.model("User", UserSchema);
 module.exports = User;
