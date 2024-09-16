@@ -69,9 +69,14 @@ const getUsercredintials = async (req, res) => {
 };
 const selfRegister = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, username } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
-    const admin = new Admin({ email, password: hashedPassword, role: "admin" });
+    const admin = new Admin({
+      email,
+      password: hashedPassword,
+      role: "admin",
+      username,
+    });
     await admin.save();
     res.json({ message: "Admin added successfully" });
   } catch (error) {
