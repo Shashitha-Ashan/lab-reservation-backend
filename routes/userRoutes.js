@@ -9,6 +9,7 @@ const {
   addUserFromAdmin,
   userConfirmation,
   getUsers,
+  getLecturers,
 } = require("../controllers/userController");
 const { isAdmin } = require("../middlewares/verifyAdmin");
 
@@ -19,5 +20,6 @@ router.post("/verify", verifyToken, isAdmin, verifyUser);
 router.post("/add", verifyToken, isAdmin, addUserFromAdmin);
 router.get("/confirm/:token", userConfirmation);
 router.get("/users", verifyToken, isAdmin, getUsers);
+router.get("/lecturers", verifyToken, isAdmin, getLecturers);
 
 module.exports = router;

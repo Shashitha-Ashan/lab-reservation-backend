@@ -184,6 +184,25 @@ const getUsers = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+const getLecturers = async (req, res) => {
+  try {
+    const projectionFields = {
+      _id: 1,
+      name: 1,
+      uniEmail: 1,
+      role: 1,
+      academicYear: 1,
+      department: 1,
+    };
+
+    const users = await User.find({ role: "lecturer" }, projectionFields);
+
+    res.status(200).json({ users });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
 module.exports = {
   register,
   login,
@@ -193,4 +212,5 @@ module.exports = {
   addUserFromAdmin,
   userConfirmation,
   getUsers,
+  getLecturers,
 };
