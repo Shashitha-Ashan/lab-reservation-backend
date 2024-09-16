@@ -389,6 +389,24 @@ const cancelRangeOfTimeSlots = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+const getAllTimeSlots = async (_, res) => {
+  try {
+    const timeSlots = await TimeTableSlot.find()
+      .populate("module", "moduleCode moduleName")
+      .populate("lecturer", "name")
+      .populate("hall", "hallName")
+      .exec();
+
+    const filterTimeSlots = timeSlots.filter(
+      (slot) => slot.module !== null && slot.module.department !== null
+    );
+
+    res.status(200).json({ filterTimeSlots });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
 
 module.exports = {
   getTodayTimeSlots,
@@ -402,4 +420,5 @@ module.exports = {
   getRescheduleModules,
   addExtraLecture,
   cancelRangeOfTimeSlots,
+  getAllTimeSlots,
 };
