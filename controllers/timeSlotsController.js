@@ -264,7 +264,6 @@ const formatDate = (dateString) => {
 const getSelectedDateTimeSlots = async (req, res) => {
   try {
     const { selectedDate } = req.body;
-
     const date = formatDate(selectedDate);
     if (req.user.role === "student") {
       const studentYear = await getYearByStudentAcademicYear(
