@@ -1,6 +1,6 @@
 const User = require("../models/userModel");
 const bcrypt = require("bcrypt");
-const sendConfirmationEmail = require("../utils/services/emailService");
+const { sendConfirmationEmail } = require("../utils/services/emailService");
 
 // Helper functions
 const {
@@ -36,7 +36,7 @@ const register = async (req, res) => {
     });
 
     await user.save();
-    await sendConfirmationEmail(user.uniEmail, user.generateEmailToken());
+    // await sendConfirmationEmail(user.uniEmail, user.generateEmailToken());
     res
       .status(201)
       .json({ message: "User registered successfully please verify email" });

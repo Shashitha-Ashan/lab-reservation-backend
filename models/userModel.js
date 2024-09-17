@@ -27,17 +27,11 @@ const UserSchema = new mongoose.Schema({
   adminConfirmation: {
     type: Boolean,
     default: false,
-    required: function () {
-      return this.role === "lecturer" || this.role === "demonstrator";
-    },
   },
   focusArea: {
     type: mongoose.Types.ObjectId,
     ref: "FocusArea",
     default: null,
-    required: function () {
-      return this.role === "student";
-    },
   },
 });
 

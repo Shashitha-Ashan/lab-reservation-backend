@@ -255,10 +255,17 @@ const searchFreeSlots = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+const formatDate = (dateString) => {
+  let [year, month, day] = dateString.split("-");
+  month = month.padStart(2, "0");
+  day = day.padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
 const getSelectedDateTimeSlots = async (req, res) => {
   try {
     const { selectedDate } = req.body;
-    const date = selectedDate;
+
+    const date = formatDate(selectedDate);
     if (req.user.role === "student") {
       const studentYear = await getYearByStudentAcademicYear(
         req.user.academicYear
@@ -271,7 +278,7 @@ const getSelectedDateTimeSlots = async (req, res) => {
           match: {
             year: studentYear,
           },
-          select: { moduleCode: 1, moduleName: 1 },
+          select: { moduleCode: 1, moduleName: 1, year: 1 },
           populate: {
             path: "department",
             match: { name: req.user.department },
@@ -300,7 +307,7 @@ const getSelectedDateTimeSlots = async (req, res) => {
       })
         .populate({
           path: "module",
-          select: { moduleCode: 1, moduleName: 1 },
+          select: { moduleCode: 1, moduleName: 1, year: 1 },
           populate: {
             path: "department",
             select: "name",
@@ -313,7 +320,13 @@ const getSelectedDateTimeSlots = async (req, res) => {
         .populate({ path: "lecturer", select: "name" })
         .populate({ path: "hall", select: "hallName" })
         .exec();
-      return res.status(200).json({ timeSlots });
+      const filteredTimeSlots = timeSlots.filter(
+        (slot) => slot.module !== null && slot.module.department !== null
+      );
+      const acsendingOrderesSlotsByTime = filteredTimeSlots.sort((a, b) => {
+        return new Date(a.start_time) - new Date(b.start_time);
+      });
+      return res.status(200).json({ timeSlots: acsendingOrderesSlotsByTime });
     }
   } catch (error) {
     console.error(error);
@@ -323,28 +336,66 @@ const getSelectedDateTimeSlots = async (req, res) => {
 const getRescheduleModules = async (req, res) => {
   try {
     if (req.user.role === "student") {
+      const studentYear = await getYearByStudentAcademicYear(
+        req.user.academicYear
+      );
       const timeSlots = await TimeTableSlot.find({
-        slot_type: "rescheduled",
+        slot_type: { $in: ["rescheduled", "cancelled", "extra"] },
       })
         .populate({
           path: "module",
           match: {
-            academicYear: req.user.academicYear,
-            department: req.user.department,
+            year: studentYear,
+          },
+          select: { moduleCode: 1, moduleName: 1, year: 1 },
+          populate: {
+            path: "department",
+            match: { name: req.user.department },
+            select: "name",
+          },
+          populate: {
+            path: "focusArea",
+            select: "name",
           },
         })
+        .populate({ path: "lecturer", select: "name" })
+        .populate({ path: "hall", select: "hallName" })
         .exec();
       const filteredTimeSlots = timeSlots.filter(
-        (slot) => slot.module !== null
+        (slot) => slot.module !== null && slot.module.department !== null
       );
-      return res.status(200).json({ timeSlots: filteredTimeSlots });
+      const acsendingOrderesSlotsByTime = filteredTimeSlots.sort((a, b) => {
+        return new Date(a.start_time) - new Date(b.start_time);
+      });
+      return res.status(200).json({ timeSlots: acsendingOrderesSlotsByTime });
     }
     if (req.user.role === "lecturer") {
       const timeSlots = await TimeTableSlot.find({
-        slot_type: "rescheduled",
-        lecturer: req.user._id,
+        slot_type: { $in: ["reschaduled", "cancelled", "extra"] },
+        lecturer: req.user.id,
+      })
+        .populate({
+          path: "module",
+          select: { moduleCode: 1, moduleName: 1, year: 1 },
+          populate: {
+            path: "department",
+            select: "name",
+          },
+          populate: {
+            path: "focusArea",
+            select: "name",
+          },
+        })
+        .populate({ path: "lecturer", select: "name" })
+        .populate({ path: "hall", select: "hallName" })
+        .exec();
+      const filteredTimeSlots = timeSlots.filter(
+        (slot) => slot.module !== null && slot.module.department !== null
+      );
+      const acsendingOrderesSlotsByTime = filteredTimeSlots.sort((a, b) => {
+        return new Date(a.start_time) - new Date(b.start_time);
       });
-      return res.status(200).json({ timeSlots });
+      return res.status(200).json({ timeSlots: acsendingOrderesSlotsByTime });
     }
   } catch (error) {
     console.error(error);
