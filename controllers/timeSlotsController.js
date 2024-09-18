@@ -177,13 +177,13 @@ const editTimeSlot = async (req, res) => {
 };
 const rescheduleTimeSlot = async (req, res) => {
   try {
-    const { id, newDate, start_time, end_time } = req.body;
-    const reschedule_by = req.user._id;
+    const { id, newDate, startTime, endTime } = req.body;
+    const reschedule_by = req.user.id;
     const timeSlot = await TimeTableSlot.findById(id);
-    timeSlot.slot_type = "rescheduled";
+    timeSlot.slot_type = "reschaduled";
     timeSlot.date = newDate;
-    timeSlot.start_time = start_time;
-    timeSlot.end_time = end_time;
+    timeSlot.start_time = startTime;
+    timeSlot.end_time = endTime;
     await timeSlot.save();
 
     const newRescheduleModule = new RescheduleModule({

@@ -13,7 +13,10 @@ const sendRescheduleNotificationToStudents = async (
 ) => {
   let deviceIds = [];
   const students = await getStudentsByModuleId(moduleId);
-  const DeviceIds = await DeviceId.find({ userId: { $in: "students" } });
+  const DeviceIds = await DeviceId.find({ userId }).populate({
+    path: "userId",
+    match: { role: "student" },
+  });
   deviceIds = DeviceIds.map((device) => device.deviceId);
   const title = "Reschedule Notification";
   const body = `The module has been rescheduled to ${newDate} from ${startTime} to ${endTime}`;
