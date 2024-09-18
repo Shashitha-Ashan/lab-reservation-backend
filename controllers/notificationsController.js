@@ -13,11 +13,11 @@ const sendRescheduleNotificationToStudents = async (
 ) => {
   let deviceIds = [];
   const students = await getStudentsByModuleId(moduleId);
-  const DeviceIds = await DeviceId.find({ userId: { $in: students } });
+  const DeviceIds = await DeviceId.find({ userId: { $in: "students" } });
   deviceIds = DeviceIds.map((device) => device.deviceId);
   const title = "Reschedule Notification";
   const body = `The module has been rescheduled to ${newDate} from ${startTime} to ${endTime}`;
-  sendBulkNotification(deviceIds, title, body);
+  await sendBulkNotification(deviceIds, title, body);
 };
 const getStudentsByModuleId = async (_id) => {
   const module = await Module.findById(_id);
@@ -35,7 +35,7 @@ const sendCancellationNotificationToStudents = async (moduleId) => {
   deviceIds = DeviceIds.map((device) => device.deviceId);
   const title = "Cancellation Notification";
   const body = `The module has been cancelled`;
-  sendBulkNotification(deviceIds, title, body);
+  await sendBulkNotification(deviceIds, title, body);
 };
 
 const sendCancellationNotificationToLectures = async () => {
@@ -45,7 +45,7 @@ const sendCancellationNotificationToLectures = async () => {
   deviceIds = DeviceIds.map((device) => device.deviceId);
   const title = "Cancellation Notification";
   const body = `The module has been cancelled`;
-  sendBulkNotification(deviceIds, title, body);
+  await sendBulkNotification(deviceIds, title, body);
 };
 
 module.exports = {

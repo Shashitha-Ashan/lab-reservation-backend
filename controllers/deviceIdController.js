@@ -3,8 +3,8 @@ const DeviceId = require("../models/deviceIdsModel");
 const createOrUpdateDeviceId = async (req, res) => {
   try {
     const { deviceId } = req.body;
-    const { _id } = req.user;
-    const existingUser = await DeviceId.findOne({ _id });
+    const id = req.user.id;
+    const existingUser = await DeviceId.findOne({ id });
     if (existingUser) {
       existingUser.deviceId = deviceId;
       await existingDevice.save();
@@ -12,7 +12,7 @@ const createOrUpdateDeviceId = async (req, res) => {
     }
     const newDevice = new DeviceId({
       deviceId,
-      userId: _id,
+      userId: id,
     });
     await newDevice.save();
     return res.status(200).json({ message: "Device ID created successfully" });
