@@ -254,6 +254,9 @@ const searchFreeSlots = async (req, res) => {
       NOSeats: { $gte: capacity },
       hallType: slotType,
     });
+    if (freeHalls.length === 0) {
+      return res.status(200).json({ avaiable: null });
+    }
     const closetSlots = freeHalls.sort((a, b) => a.NOSeats - b.NOSeats);
     res.status(200).json({ avaiable: closetSlots[0] });
   } catch (error) {
