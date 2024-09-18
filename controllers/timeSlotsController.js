@@ -15,7 +15,6 @@ const getTodayTimeSlots = async (req, res) => {
   try {
     const today = new Date();
     const todayDate = today.toISOString().split("T")[0];
-    console.log(todayDate);
     if (req.user.role === "student") {
       const studentYear = await getYearByStudentAcademicYear(
         req.user.academicYear
@@ -177,17 +176,27 @@ const editTimeSlot = async (req, res) => {
 };
 const rescheduleTimeSlot = async (req, res) => {
   try {
-    const { id, newDate, startTime, endTime } = req.body;
+    const { id, newDate, startTime, endTime, hallId } = req.body;
+    const isRescheduled = await checkIfTimeSlotIsRescheduled(id);
+    const isConflict = await checkTimeSlotConflict(newDate, startTime, endTime);
+    if (isRescheduled) {
+      return res.status(400).json({ message: "Time slot already rescheduled" });
+    }
+    if (isConflict) {
+      return res.status(400).json({ message: "Time slot conflict" });
+    }
+
     const reschedule_by = req.user.id;
     const timeSlot = await TimeTableSlot.findById(id);
     timeSlot.slot_type = "reschaduled";
     timeSlot.date = newDate;
     timeSlot.start_time = startTime;
     timeSlot.end_time = endTime;
+    timeSlot.hall = hallId;
     await timeSlot.save();
 
     const newRescheduleModule = new RescheduleModule({
-      reschedule_by,
+      reschadule_by: reschedule_by,
       time_slot: timeSlot._id,
     });
     await newRescheduleModule.save();
@@ -204,6 +213,19 @@ const rescheduleTimeSlot = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+const checkIfTimeSlotIsRescheduled = async (id) => {
+  const rescheduleModule = await TimeTableSlot.findById(id);
+
+  return rescheduleModule.slot_type === "reschaduled";
+};
+const checkTimeSlotConflict = async (date, startTime, endTime) => {
+  const timeSlots = await TimeTableSlot.find({
+    date: date,
+    $or: [{ start_time: { $lt: endTime }, end_time: { $gt: startTime } }],
+  });
+  return timeSlots.length > 0;
+};
+
 const cancelTimeSlot = async (req, res) => {
   try {
     const { id } = req.body;

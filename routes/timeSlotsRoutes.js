@@ -21,7 +21,7 @@ router.get("/today", getTodayTimeSlots);
 router.post("/add", isAdmin, addTimeSlot);
 router.delete("/delete/:id", isAdmin, deleteTimeSlot);
 router.put("/edit/:id", isAdmin, editTimeSlot);
-router.put("/reschedule/:id", isLecturer, rescheduleTimeSlot);
+router.post("/reschedule", isLecturer, rescheduleTimeSlot);
 router.put("/cancel/:id", isLecturer, cancelTimeSlot);
 router.post("/selectedate", getSelectedDateTimeSlots);
 router.get("/reschedule", getRescheduleModules);
