@@ -15,7 +15,7 @@ const getTodayTimeSlots = async (req, res) => {
   try {
     const today = new Date();
     const todayDate = today.toISOString().split("T")[0];
-
+    console.log(todayDate);
     if (req.user.role === "student") {
       const studentYear = await getYearByStudentAcademicYear(
         req.user.academicYear
@@ -28,7 +28,7 @@ const getTodayTimeSlots = async (req, res) => {
           match: {
             year: studentYear,
           },
-          select: { moduleCode: 1, moduleName: 1 },
+          select: { moduleCode: 1, moduleName: 1, year: 1 },
           populate: {
             path: "department",
             match: { name: req.user.department },
@@ -53,11 +53,11 @@ const getTodayTimeSlots = async (req, res) => {
     if (req.user.role === "lecturer") {
       const timeSlots = await TimeTableSlot.find({
         date: todayDate,
-        lecturer: req.user._id,
+        lecturer: req.user.id,
       })
         .populate({
           path: "module",
-          select: { moduleCode: 1, moduleName: 1 },
+          select: { moduleCode: 1, moduleName: 1, year: 1 },
           populate: {
             path: "department",
             select: "name",
@@ -70,7 +70,13 @@ const getTodayTimeSlots = async (req, res) => {
         .populate({ path: "lecturer", select: "name" })
         .populate({ path: "hall", select: "hallName" })
         .exec();
-      return res.status(200).json({ timeSlots });
+      const filteredTimeSlots = timeSlots.filter(
+        (slot) => slot.module !== null && slot.module.department !== null
+      );
+      const acsendingOrderesSlotsByTime = filteredTimeSlots.sort((a, b) => {
+        return new Date(a.start_time) - new Date(b.start_time);
+      });
+      return res.status(200).json({ timeSlots: acsendingOrderesSlotsByTime });
     }
   } catch (error) {
     console.error(error);
