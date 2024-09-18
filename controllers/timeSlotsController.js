@@ -255,10 +255,10 @@ const searchFreeSlots = async (req, res) => {
       hallType: slotType,
     });
     if (freeHalls.length === 0) {
-      return res.status(200).json({ avaiable: null });
+      return res.status(200).json({ available: null });
     }
     const closetSlots = freeHalls.sort((a, b) => a.NOSeats - b.NOSeats);
-    res.status(200).json({ avaiable: closetSlots[0] });
+    res.status(200).json({ available: closetSlots[0] });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
