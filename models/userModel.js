@@ -26,7 +26,9 @@ const UserSchema = new mongoose.Schema({
   },
   adminConfirmation: {
     type: Boolean,
-    default: false,
+    default: function () {
+      return this.role !== "lecturer";
+    },
   },
   focusArea: {
     type: mongoose.Types.ObjectId,

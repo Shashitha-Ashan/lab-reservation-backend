@@ -50,8 +50,48 @@ const sendCancellationNotificationToLectures = async () => {
   const body = `The module has been cancelled`;
   await sendBulkNotification(deviceIds, title, body);
 };
+const sendNotificationToAll = async (req, res) => {
+  try {
+    const { title, body } = req.body;
+    let deviceIds = [];
+    const devices = await DeviceId.find();
+    console.log(devices.length);
+    // deviceIds = devices.map((device) => device.deviceId);
+    await sendBulkNotification(deviceIds, title, body);
 
+    res.status(200).json({ message: "Notification sent" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+const sendNotificationToStudents = async (req, res) => {
+  try {
+    const { title, body } = req.body;
+    let deviceIds = [];
+    const students = await User.find({ role: "student" });
+    const DeviceIds = await DeviceId.find({ userId: { $in: students } });
+    deviceIds = DeviceIds.map((device) => device.deviceId);
+    await sendBulkNotification(deviceIds, title, body);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+const sendNotificationToLectures = async (req, res) => {
+  try {
+    const { title, body } = req.body;
+    let deviceIds = [];
+    const lectures = await User.find({ role: "lecturer" });
+    const DeviceIds = await DeviceId.find({ userId: { $in: lectures } });
+    deviceIds = DeviceIds.map((device) => device.deviceId);
+    await sendBulkNotification(deviceIds, title, body);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 module.exports = {
   sendRescheduleNotificationToStudents,
   sendCancellationNotificationToStudents,
+  sendNotificationToAll,
+  sendNotificationToStudents,
+  sendNotificationToLectures,
 };

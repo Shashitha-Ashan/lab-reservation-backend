@@ -22,6 +22,16 @@ const createOrUpdateDeviceId = async (req, res) => {
   }
 };
 
+const getAllDeviceId = async (req, res) => {
+  try {
+    const deviceIds = await DeviceId.find();
+    return res.status(200).json({ deviceIds });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 const removeDeviceId = async (req, res) => {
   try {
     const { _id } = req.user;
@@ -36,4 +46,4 @@ const removeDeviceId = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
-module.exports = { createOrUpdateDeviceId };
+module.exports = { createOrUpdateDeviceId, getAllDeviceId };

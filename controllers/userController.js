@@ -14,14 +14,16 @@ const {
 const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
     if (!isUniversityEmail(email)) {
       return res.status(400).json({ message: "Invalid email" });
     }
-    if (
-      await User.findOne({
-        uniEmail: email,
-      })
-    ) {
+    const alreadyUser = await User.findOne({
+      uniEmail: email,
+    });
+    if (alreadyUser) {
       return res.status(400).json({ message: "User already exists" });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -34,7 +36,6 @@ const register = async (req, res) => {
       academicYear: getAcademicYear(email),
       department: getDepartment(email),
     });
-
     await user.save();
     // await sendConfirmationEmail(user.uniEmail, user.generateEmailToken());
     res
@@ -54,6 +55,9 @@ const login = async (req, res) => {
 
     if (!user) {
       return res.status(401).json({ message: "Invalid email or password" });
+    }
+    if (user.isVerified === false) {
+      return res.status(401).json({ message: "User not verified" });
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);

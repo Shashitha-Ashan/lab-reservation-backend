@@ -66,6 +66,11 @@ app.use(
   require("./routes/departmentRoutes")
 );
 app.use("/api/v1/focus-area", verifyToken, require("./routes/focusAreaRoutes"));
+app.use(
+  "/api/v1/notification",
+  verifyToken,
+  require("./routes/notificationsRoutes")
+);
 
 // test route
 app.get("/", (req, res) => {
