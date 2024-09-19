@@ -10,4 +10,12 @@ const getYearByStudentAcademicYear = async (academicYear) => {
   const studentAcademicYear = await AcademicYear.findOne({ academicYear });
   return studentAcademicYear.year;
 };
-module.exports = { getAcademicYear, getYearByStudentAcademicYear };
+const getAcademicYearByYear = async (year) => {
+  const studentAcademicYear = await AcademicYear.findOne({ year });
+  return studentAcademicYear.academicYear;
+};
+module.exports = {
+  getAcademicYear,
+  getYearByStudentAcademicYear,
+  getAcademicYearByYear,
+};

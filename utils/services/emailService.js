@@ -23,5 +23,17 @@ const sendConfirmationEmail = async (userEmail, token) => {
     .then((msg) => console.log(msg)) // logs response data
     .catch((err) => console.error(err)); // logs any error
 };
+const sendRescheduleCancellationEmail = async (userEmail, token) => {
+  mg.messages
+    .create("sandbox-123.mailgun.org", {
+      from: "Lab Lecture hall Reservation <noreply@llrs.com>",
+      to: [`${userEmail}`],
+      subject: "Reschedule/Cancellation Email",
+      text: "Reschedule/Cancellation email",
+      html: ` `,
+    })
+    .then((msg) => console.log(msg)) // logs response data
+    .catch((err) => console.error(err)); // logs any error
+};
 
-module.exports = { sendConfirmationEmail };
+module.exports = { sendConfirmationEmail, sendRescheduleCancellationEmail };

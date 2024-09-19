@@ -24,6 +24,14 @@ const TimeTableSlotSchema = new mongoose.Schema({
     default: "ordinary",
     required: true,
   },
+  slotStatus: {
+    type: String,
+    enum: ["pending", "approved", "rejected"],
+    default: function () {
+      return this.slot_type === "ordinary" ? "approved" : "pending"; // not sure about this yet
+    },
+    required: true,
+  },
   sessionType: {
     type: String,
     enum: ["lecture", "lab"],

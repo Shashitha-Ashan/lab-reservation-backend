@@ -3,7 +3,12 @@ const Module = require("../models/moduleModel");
 const DeviceId = require("../models/deviceIdsModel");
 const {
   sendBulkNotification,
+  sendIndividualNotification,
 } = require("../utils/helpers/sendNotificationHelper");
+
+const {
+  getAcademicYearByYear,
+} = require("../utils/helpers/academicYearHelper");
 
 const sendRescheduleNotificationToStudents = async (
   moduleId,
@@ -23,19 +28,26 @@ const sendRescheduleNotificationToStudents = async (
   await sendBulkNotification(deviceIds, title, body);
 };
 const getStudentsByModuleId = async (_id) => {
-  const module = await Module.findById(_id);
+  const module = await Module.findById(_id).populate("department");
+  const year = await getAcademicYearByYear(module.year);
+  const department = module.department.name;
+  console.log(department);
   const students = await User.find({
     role: "student",
-    academicYear: module.academicYear,
-    department: module.department,
+    academicYear: year,
+    department: department,
   });
-  return students;
+  const studentIds = students.map((student) => student._id);
+  return studentIds;
 };
 const sendCancellationNotificationToStudents = async (moduleId) => {
   let deviceIds = [];
   const students = await getStudentsByModuleId(moduleId);
+  if (students.length === 0) return;
   const DeviceIds = await DeviceId.find({ userId: { $in: students } });
+  if (DeviceIds.length === 0) return;
   deviceIds = DeviceIds.map((device) => device.deviceId);
+  console.log(deviceIds);
   const title = "Cancellation Notification";
   const body = `The module has been cancelled`;
   await sendBulkNotification(deviceIds, title, body);
@@ -87,10 +99,20 @@ const sendNotificationToLectures = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+const sendNotificationToLecturer = async (message) => {
+  try {
+    const { title, body, lecturerId } = message;
+    const DeviceId = await DeviceId.find({ userId: lecturerId });
+    await sendIndividualNotification(DeviceId.deviceId, title, body);
+  } catch (error) {
+    console.log(error.message);
+  }
+};
 module.exports = {
   sendRescheduleNotificationToStudents,
   sendCancellationNotificationToStudents,
   sendNotificationToAll,
   sendNotificationToStudents,
   sendNotificationToLectures,
+  sendNotificationToLecturer,
 };

@@ -22,7 +22,7 @@ router.post("/add", isAdmin, addTimeSlot);
 router.delete("/delete/:id", isAdmin, deleteTimeSlot);
 router.put("/edit/:id", isAdmin, editTimeSlot);
 router.post("/reschedule", isLecturer, rescheduleTimeSlot);
-router.put("/cancel/:id", isLecturer, cancelTimeSlot);
+router.post("/cancel", isLecturer, cancelTimeSlot);
 router.post("/selectedate", getSelectedDateTimeSlots);
 router.get("/reschedule", getRescheduleModules);
 router.post("/add-extra", isLecturer, addExtraLecture);

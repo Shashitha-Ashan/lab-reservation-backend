@@ -9,6 +9,7 @@ const {
 const {
   sendRescheduleNotificationToStudents,
   sendCancellationNotificationToStudents,
+  sendNotificationToLecturer,
 } = require("./notificationsController");
 
 const getTodayTimeSlots = async (req, res) => {
@@ -178,13 +179,18 @@ const rescheduleTimeSlot = async (req, res) => {
   try {
     const { id, newDate, startTime, endTime, hallId } = req.body;
     const isRescheduled = await checkIfTimeSlotIsRescheduled(id);
-    const isConflict = await checkTimeSlotConflict(newDate, startTime, endTime);
+    // const isConflict = await checkTimeSlotConflict(
+    //   newDate,
+    //   startTime,
+    //   endTime,
+    //   hallId
+    // );
     if (isRescheduled) {
       return res.status(400).json({ message: "Time slot already rescheduled" });
     }
-    if (isConflict) {
-      return res.status(400).json({ message: "Time slot conflict" });
-    }
+    // if (isConflict) {
+    //   return res.status(400).json({ message: "Time slot conflict" });
+    // }
 
     const reschedule_by = req.user.id;
     const timeSlot = await TimeTableSlot.findById(id);
@@ -193,6 +199,7 @@ const rescheduleTimeSlot = async (req, res) => {
     timeSlot.start_time = startTime;
     timeSlot.end_time = endTime;
     timeSlot.hall = hallId;
+    timeSlot.slotStatus = "pending";
     await timeSlot.save();
 
     const newRescheduleModule = new RescheduleModule({
@@ -201,12 +208,6 @@ const rescheduleTimeSlot = async (req, res) => {
     });
     await newRescheduleModule.save();
 
-    // await sendRescheduleNotificationToStudents(
-    //   timeSlot.module,
-    //   newDate,
-    //   start_time,
-    //   end_time
-    // );
     res.status(200).json({ message: "Time slot rescheduled successfully" });
   } catch (error) {
     console.error(error);
@@ -218,27 +219,30 @@ const checkIfTimeSlotIsRescheduled = async (id) => {
 
   return rescheduleModule.slot_type === "reschaduled";
 };
-const checkTimeSlotConflict = async (date, startTime, endTime) => {
-  const timeSlots = await TimeTableSlot.find({
-    date: date,
-    $or: [{ start_time: { $lt: endTime }, end_time: { $gt: startTime } }],
-  });
-  return timeSlots.length > 0;
-};
+// const checkTimeSlotConflict = async (date, startTime, endTime, hall) => {
+//   const timeSlots = await TimeTableSlot.find({
+//     date: date,
+//     $or: [{ start_time: { $lt: endTime }, end_time: { $gt: startTime } }],
+//     $or: [{ hall: hall }],
+//   });
+//   return timeSlots.length > 0;
+// };
 
 const cancelTimeSlot = async (req, res) => {
   try {
     const { id } = req.body;
     const timeSlot = await TimeTableSlot.findById(id);
     timeSlot.slot_type = "cancelled";
+    timeSlot.slotStatus = "pending";
     await timeSlot.save();
-    // await sendCancellationNotificationToStudents(timeSlot);
+    await sendCancellationNotificationToStudents(timeSlot.module.toString());
     res.status(200).json({ message: "Time slot cancelled successfully" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
 const searchFreeSlots = async (req, res) => {
   try {
     let { date, startTime, endTime, capacity, slotType } = req.body;
@@ -488,6 +492,42 @@ const getAllTimeSlots = async (_, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+const confirmRescheduleOrCancellation = async (req, res) => {
+  try {
+    const { id } = req.body;
+    const timeSlot = await TimeTableSlot.findById(id);
+    timeSlot.slotStatus = "approved";
+    await timeSlot.save();
+    await sendRescheduleNotificationToStudents(
+      timeSlot.module,
+      timeSlot.date,
+      timeSlot.start_time,
+      timeSlot.end_time
+    );
+    // body time should formated
+    const lecturerId = timeSlot.lecturer;
+    const title = "Reschedule/Cancellation Notification";
+    const body = `The module has been rescheduled to ${timeSlot.date} from ${timeSlot.start_time} to ${timeSlot.end_time}`;
+    await sendNotificationToLecturer({ title, body, lecturerId });
+    res.status(200).json({ message: "Approved" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+const rejectRescheduleOrCancellation = async (req, res) => {
+  try {
+    const { id } = req.body;
+    const timeSlot = await TimeTableSlot.findById(id);
+    timeSlot.slotStatus = "rejected";
+    await timeSlot.save();
+
+    res.status(200).json({ message: "Time slot status updated successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
 
 module.exports = {
   getTodayTimeSlots,
@@ -502,4 +542,5 @@ module.exports = {
   addExtraLecture,
   cancelRangeOfTimeSlots,
   getAllTimeSlots,
+  confirmRescheduleOrCancellation,
 };
