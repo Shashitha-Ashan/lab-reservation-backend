@@ -21,11 +21,10 @@ const createOrUpdateDeviceId = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
-
 const getAllDeviceId = async (req, res) => {
   try {
     const deviceIds = await DeviceId.find();
-    return res.status(200).json({ deviceIds });
+    return res.json(deviceIds);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Internal Server Error" });

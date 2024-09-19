@@ -55,8 +55,7 @@ const sendNotificationToAll = async (req, res) => {
     const { title, body } = req.body;
     let deviceIds = [];
     const devices = await DeviceId.find();
-    console.log(devices.length);
-    // deviceIds = devices.map((device) => device.deviceId);
+    deviceIds = devices.map((device) => device.deviceId);
     await sendBulkNotification(deviceIds, title, body);
 
     res.status(200).json({ message: "Notification sent" });
