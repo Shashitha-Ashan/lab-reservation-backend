@@ -1,5 +1,6 @@
 const FocusArea = require("../models/focusAreaModel");
 const mongoose = require("mongoose");
+const User = require("../models/userModel");
 
 const addNewFocusArea = async (req, res) => {
   const { focusAreaName, departmentId } = req.body;
@@ -39,10 +40,17 @@ const deleteFocusArea = async (req, res) => {
 
 const getFocusAreas = async (req, res) => {
   try {
-    const { departmentId } = req.body;
-    if (departmentId) {
-      const focusAreas = await FocusArea.find({ department: departmentId });
-      return res.json(focusAreas);
+    const dep = req.user.department;
+    if (dep) {
+      const focusAreas = await FocusArea.find().populate({
+        path: "department",
+        match: { name: dep },
+      });
+
+      const filteredFocusAreas = focusAreas.filter(
+        (focusArea) => focusArea.department !== null
+      );
+      return res.status(200).json({ focusAreas: filteredFocusAreas });
     }
 
     res.status(404).json({ message: "No focus areas found" });
@@ -68,11 +76,28 @@ const getAllFocusAreas = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
+const updateUserFocusArea = async (req, res) => {
+  try {
+    const { _id } = req.body;
+    if (!mongoose.Types.ObjectId.isValid(_id)) {
+      return res.status(404).send("No focus area with that id");
+    }
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).send("No user with that id");
+    }
+    user.focusArea = _id;
+    await user.save();
+    res.json({ message: "Focus area updated successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 module.exports = {
   addNewFocusArea,
   updateFocusArea,
   deleteFocusArea,
   getFocusAreas,
   getAllFocusAreas,
+  updateUserFocusArea,
 };

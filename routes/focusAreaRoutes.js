@@ -7,13 +7,14 @@ const {
   getFocusAreas,
   updateFocusArea,
   getAllFocusAreas,
+  updateUserFocusArea,
 } = require("../controllers/focusAreaController");
 
-router.use(isAdmin);
-router.get("/:id", getFocusAreas);
-router.get("/", getAllFocusAreas);
-router.post("/", addNewFocusArea);
-router.put("/:id", updateFocusArea);
-router.delete("/:id", deleteFocusArea);
+router.get("/selected", getFocusAreas);
+router.get("/", isAdmin, getAllFocusAreas);
+router.post("/", isAdmin, addNewFocusArea);
+router.put("/:id", isAdmin, updateFocusArea);
+router.delete("/:id", isAdmin, deleteFocusArea);
+router.post("/user", updateUserFocusArea);
 
 module.exports = router;
