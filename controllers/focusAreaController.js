@@ -41,6 +41,9 @@ const deleteFocusArea = async (req, res) => {
 const getFocusAreas = async (req, res) => {
   try {
     const dep = req.user.department;
+    if (req.user.role === "lecturer") {
+      return res.status(200).json({ focusAreas: [] });
+    }
     if (dep) {
       const focusAreas = await FocusArea.find().populate({
         path: "department",
