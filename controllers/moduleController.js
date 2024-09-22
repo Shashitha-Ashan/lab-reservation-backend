@@ -10,8 +10,8 @@ const addNewModule = async (req, res) => {
     NOHours,
     department,
     focusArea,
-    year,
   } = req.body;
+  console.log(req.body);
   const existingModule = await Module.findOne({ moduleCode });
   if (existingModule) {
     return res.status(409).json({ message: "Module already exists" });
@@ -21,11 +21,10 @@ const addNewModule = async (req, res) => {
     moduleCode,
     moduleName,
     semester,
-    academicYear,
     NOHours,
     department,
     focusArea,
-    year,
+    year: academicYear,
   });
 
   try {

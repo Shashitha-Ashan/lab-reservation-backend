@@ -93,6 +93,23 @@ const updateUserFocusArea = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+const getFocusAreasBydepartment = async (req, res) => {
+  try {
+    const { departmentId } = req.params;
+    if (departmentId === "all") {
+      const focusAreas = await FocusArea.find();
+      return res.status(200).json(focusAreas);
+    }
+    if (!mongoose.Types.ObjectId.isValid(departmentId)) {
+      return res.status(404).send("No department with that id");
+    }
+
+    const focusAreas = await FocusArea.find({ department: departmentId });
+    res.status(200).json(focusAreas);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 module.exports = {
   addNewFocusArea,
   updateFocusArea,
@@ -100,4 +117,5 @@ module.exports = {
   getFocusAreas,
   getAllFocusAreas,
   updateUserFocusArea,
+  getFocusAreasBydepartment,
 };
