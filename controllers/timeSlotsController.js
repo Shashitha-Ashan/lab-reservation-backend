@@ -177,7 +177,13 @@ const editTimeSlot = async (req, res) => {
 };
 const rescheduleTimeSlot = async (req, res) => {
   try {
-    const { id, newDate, startTime, endTime, hallId } = req.body;
+    let { id, newDate, startTime, endTime, hallId } = req.body;
+    startTime = new Date(
+      newDate + "T" + startTime.split("T")[1] + "Z"
+    ).toISOString();
+    endTime = new Date(
+      newDate + "T" + endTime.split("T")[1] + "Z"
+    ).toISOString();
     const isRescheduled = await checkIfTimeSlotIsRescheduled(id);
     // const isConflict = await checkTimeSlotConflict(
     //   newDate,
@@ -250,8 +256,8 @@ const searchFreeSlots = async (req, res) => {
       return res.status(400).json({ message: "Missing required fields" });
     }
     slotType = slotType.toLowerCase();
-    const startDateTime = new Date(date + "T" + startTime.split("T")[1]);
-    const endDateTime = new Date(date + "T" + endTime.split("T")[1]);
+    const startDateTime = new Date(date + "T" + startTime.split("T")[1] + "Z");
+    const endDateTime = new Date(date + "T" + endTime.split("T")[1] + "Z");
 
     if (isNaN(startDateTime.getTime()) || isNaN(endDateTime.getTime())) {
       return res.status(400).json({ message: "Invalid date/time format" });
@@ -270,7 +276,7 @@ const searchFreeSlots = async (req, res) => {
       $or: [
         { start_time: { $lt: endTimeISO }, end_time: { $gt: startTimeISO } },
       ],
-      $or: [{ slot_type: "ordinary" }, { slot_type: "extra" }],
+      $nor: [{ slot_type: "cancelled" }],
     });
 
     const bookedHalls = timeSlots.map((timeSlot) => timeSlot.hall);
