@@ -83,6 +83,22 @@ const selfRegister = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+// const forgetPassword = async (req, res) => {
+//   try {
+//     const { email } = req.body;
+//     const user = await Admin.findOne ({ email });
+//     if (!user) {
+//       return res.status(401).json({ error: "Invalid email" });
+//     }
+//     const password = genarateRandomPassword();
+//     const hashedPassword = await bcrypt.hash(password, 10);
+//     await Admin.findByIdAndUpdate(user._id, { password: hashedPassword });
+//     res.json({ message: "Password updated successfully" });
+//   }
+//   catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// }
 module.exports = {
   login,
   addAdmin,

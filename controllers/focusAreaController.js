@@ -41,17 +41,23 @@ const deleteFocusArea = async (req, res) => {
 const getFocusAreas = async (req, res) => {
   try {
     const dep = req.user.department;
+    // const userYear =
     if (req.user.role === "lecturer") {
       return res.status(200).json({ focusAreas: [] });
     }
     if (dep) {
-      const focusAreas = await FocusArea.find().populate({
-        path: "department",
-        match: { name: dep },
-      });
+      const focusAreas = await FocusArea.find()
+        .populate({
+          path: "department",
+          match: { name: dep },
+        })
+        .populate({
+          path: "year",
+          match: { academicYear: req.user.academicYear },
+        });
 
       const filteredFocusAreas = focusAreas.filter(
-        (focusArea) => focusArea.department !== null
+        (focusArea) => focusArea.department !== null && focusArea.year !== null
       );
       return res.status(200).json({ focusAreas: filteredFocusAreas });
     }

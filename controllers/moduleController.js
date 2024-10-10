@@ -1,5 +1,10 @@
 const Module = require("../models/moduleModel");
 const mongoose = require("mongoose");
+const { getDepartmentIdByName } = require("../utils/helpers/departmentHelper");
+const {
+  getFocusAreaIdByName,
+  isFocusAreaMatchDepartment,
+} = require("../utils/helpers/focusAreasHelper");
 
 const addNewModule = async (req, res) => {
   const {
@@ -50,7 +55,6 @@ const getModules = async (req, res) => {
   }
 };
 const updateModule = async (req, res) => {
-  console.log("hari update");
   const { id } = req.params;
   const {
     moduleCode,
@@ -58,6 +62,7 @@ const updateModule = async (req, res) => {
     semester,
     academicYear,
     NOHours,
+    focusArea,
     department,
   } = req.body;
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -74,6 +79,7 @@ const updateModule = async (req, res) => {
     semester,
     academicYear,
     NOHours,
+    focusArea,
     department,
     _id: id,
   };
@@ -88,17 +94,54 @@ const getModule = async (req, res) => {
   const module = await Module.findById(id);
   res.json(module);
 };
-
+// TODO: check whether department and focus area mached
 const addBulkModules = async (req, res) => {
-  console.log("hari bulk");
-  const modules = req.body;
+  let modules = req.body;
   try {
+    const depIds = await getDepatmentsIds(
+      modules.map((module) => module.department)
+    );
+    const focusAreaIds = await getFocuAreasIds(
+      modules.map((module) => module.focusArea)
+    );
+    for (let i = 0; i < modules.length; i++) {
+      modules[i].department = depIds[i];
+    }
+    for (let i = 0; i < modules.length; i++) {
+      modules[i].focusArea = focusAreaIds[i];
+    }
     await Module.insertMany(modules);
     res.status(201).json({ message: "Modules added successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+const getDepatmentsIds = async (departments) => {
+  try {
+    let departmentIds = [];
+    for (let i = 0; i < departments.length; i++) {
+      const department = await getDepartmentIdByName(departments[i]);
+      departmentIds.push(department);
+    }
+    return departmentIds;
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+const getFocuAreasIds = async (focusAreas) => {
+  try {
+    let focusAreaIds = [];
+    for (let i = 0; i < focusAreas.length; i++) {
+      const focusArea = await getFocusAreaIdByName(focusAreas[i]);
+      focusAreaIds.push(focusArea);
+    }
+    return focusAreaIds;
+  } catch (error) {
+    console.log(error);
+    throw new Error(error);
+  }
+};
+
 module.exports = {
   addNewModule,
   deleteModule,
