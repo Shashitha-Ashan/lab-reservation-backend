@@ -207,6 +207,40 @@ const getLecturers = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+const forgetPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ uniEmail });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    await sendConfirmationEmail(user.uniEmail, user.generateEmailToken());
+    res.status(200).json({ message: "Email sent successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+const resetPassword = async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    const isPasswordValid = await bcrypt.compare(oldPassword, user.password);
+    if (!isPasswordValid) {
+      return res.status(400).json({ message: "Invalid password" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await User.findByIdAndUpdate(decoded.id, { password: hashedPassword });
+    res.status(200).json({ message: "Password reset successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
 module.exports = {
   register,
   login,
@@ -217,4 +251,6 @@ module.exports = {
   userConfirmation,
   getUsers,
   getLecturers,
+  forgetPassword,
+  resetPassword,
 };
