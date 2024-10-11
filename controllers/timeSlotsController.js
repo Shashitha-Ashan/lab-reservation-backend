@@ -542,20 +542,15 @@ const rejectRescheduleOrCancellation = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-<<<<<<< HEAD
-const getLecturerTimeSlotsByTimeRange = async (req, res) => {
-=======
+
 const getRangeTimeSlots = async (req, res) => {
->>>>>>> 996892ad705e510ddbfa8830937a50a957750347
   try {
     const { startDate, endDate } = req.body;
     const timeSlots = await TimeTableSlot.find({
       date: { $gte: startDate, $lte: endDate },
       lecturer: req.user.id,
-<<<<<<< HEAD
+
       slot_type: { $ne: "cancelled" },
-=======
->>>>>>> 996892ad705e510ddbfa8830937a50a957750347
     })
       .populate("module", "moduleCode moduleName")
       .populate("lecturer", "name")
@@ -566,11 +561,9 @@ const getRangeTimeSlots = async (req, res) => {
       (slot) => slot.module !== null && slot.module.department !== null
     );
 
-<<<<<<< HEAD
     res.status(200).json({ timeSlots: filterTimeSlots });
-=======
+
     res.status(200).json({ filterTimeSlots });
->>>>>>> 996892ad705e510ddbfa8830937a50a957750347
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
@@ -591,9 +584,5 @@ module.exports = {
   cancelRangeOfTimeSlots,
   getAllTimeSlots,
   confirmRescheduleOrCancellation,
-<<<<<<< HEAD
-  getLecturerTimeSlotsByTimeRange,
-=======
   getRangeTimeSlots,
->>>>>>> 996892ad705e510ddbfa8830937a50a957750347
 };
