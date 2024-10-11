@@ -71,6 +71,7 @@ app.use(
   verifyToken,
   require("./routes/notificationsRoutes")
 );
+app.use("/api/v1/summary", verifyToken, require("./routes/summaryRoutes"));
 
 // test route
 app.get("/", (req, res) => {
