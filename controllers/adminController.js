@@ -1,6 +1,7 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const Admin = require("../models/adminUserModel");
+const UserModel = require("../models/userModel");
 
 const login = async (req, res) => {
   try {
@@ -99,10 +100,21 @@ const selfRegister = async (req, res) => {
 //     res.status(500).json({ error: error.message });
 //   }
 // }
+const removeStudentBatch = async (req, res) => {
+  try {
+    const { academicYear } = req.body;
+    await UserModel.deleteMany({ academicYear });
+    res.status(200).json({ message: "Batch removed successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   login,
   addAdmin,
   removeAdmin,
   getUsercredintials,
   selfRegister,
+  removeStudentBatch,
 };

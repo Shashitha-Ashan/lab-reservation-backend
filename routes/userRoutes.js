@@ -12,6 +12,7 @@ const {
   getLecturers,
   forgetPassword,
   resetPassword,
+  passwordConfirmation,
 } = require("../controllers/userController");
 const { isAdmin } = require("../middlewares/verifyAdmin");
 
@@ -25,5 +26,6 @@ router.get("/users", verifyToken, isAdmin, getUsers);
 router.get("/lecturers", verifyToken, isAdmin, getLecturers);
 router.post("/forget-password", forgetPassword);
 router.post("/reset-password", verifyToken, resetPassword);
+router.post("/password-confirmation", verifyToken, passwordConfirmation);
 
 module.exports = router;
