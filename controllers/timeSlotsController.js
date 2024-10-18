@@ -384,7 +384,7 @@ const getRescheduleModules = async (req, res) => {
         req.user.academicYear
       );
       const timeSlots = await TimeTableSlot.find({
-        slot_type: { $in: ["rescheduled", "cancelled", "extra"] },
+        slot_type: { $in: ["reschaduled", "cancelled", "extra"] },
       })
         .populate({
           path: "module",
