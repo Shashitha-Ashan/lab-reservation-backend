@@ -11,6 +11,7 @@ const {
   sendCancellationNotificationToStudents,
   sendNotificationToLecturer,
 } = require("./notificationsController");
+const { populate } = require("../models/userModel");
 
 const getTodayTimeSlots = async (req, res) => {
   try {
@@ -238,6 +239,9 @@ const cancelTimeSlot = async (req, res) => {
   try {
     const { id } = req.body;
     const timeSlot = await TimeTableSlot.findById(id);
+    if (timeSlot.slot_type === "cancelled") {
+      return res.status(400).json({ message: "Time slot already cancelled" });
+    }
     timeSlot.slot_type = "cancelled";
     timeSlot.slotStatus = "pending";
     await timeSlot.save();
@@ -402,7 +406,10 @@ const getRescheduleModules = async (req, res) => {
         .populate({ path: "hall", select: "hallName" })
         .exec();
       const filteredTimeSlots = timeSlots.filter(
-        (slot) => slot.module !== null && slot.module.department !== null
+        (slot) =>
+          slot.module !== null &&
+          slot.module.department !== null &&
+          slot.module.focusArea !== null
       );
       const acsendingOrderesSlotsByTime = filteredTimeSlots.sort((a, b) => {
         return new Date(a.start_time) - new Date(b.start_time);
@@ -430,7 +437,10 @@ const getRescheduleModules = async (req, res) => {
         .populate({ path: "hall", select: "hallName" })
         .exec();
       const filteredTimeSlots = timeSlots.filter(
-        (slot) => slot.module !== null && slot.module.department !== null
+        (slot) =>
+          slot.module !== null &&
+          slot.module.department !== null &&
+          slot.module.focusArea !== null
       );
       const acsendingOrderesSlotsByTime = filteredTimeSlots.sort((a, b) => {
         return new Date(a.start_time) - new Date(b.start_time);
@@ -552,9 +562,21 @@ const getRangeTimeSlots = async (req, res) => {
 
       slot_type: { $ne: "cancelled" },
     })
-      .populate("module", "moduleCode moduleName")
-      .populate("lecturer", "name")
-      .populate("hall", "hallName")
+      .populate({
+        path: "module",
+        populate: {
+          path: "department",
+          match: { name: req.user.department },
+          select: "name",
+        },
+        populate: {
+          path: "focusArea",
+          select: "name",
+        },
+      })
+      .populate("lecturer")
+
+      .populate("hall")
       .exec();
 
     const filterTimeSlots = timeSlots.filter(
@@ -562,8 +584,6 @@ const getRangeTimeSlots = async (req, res) => {
     );
 
     res.status(200).json({ timeSlots: filterTimeSlots });
-
-    res.status(200).json({ filterTimeSlots });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });

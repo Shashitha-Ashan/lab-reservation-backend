@@ -1,4 +1,4 @@
-const FocusArea = require("../../models/FocusArea");
+const FocusArea = require("../../models/focusAreaModel");
 
 const getFocusAreaIdByName = async (name) => {
   const focusArea = await FocusArea.findOne({ name });
