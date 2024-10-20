@@ -201,7 +201,7 @@ const rescheduleTimeSlot = async (req, res) => {
 
     const reschedule_by = req.user.id;
     const timeSlot = await TimeTableSlot.findById(id);
-    timeSlot.slot_type = "reschaduled";
+    timeSlot.slot_type = "rescheduled";
     timeSlot.date = newDate;
     timeSlot.start_time = startTime;
     timeSlot.end_time = endTime;
@@ -224,7 +224,7 @@ const rescheduleTimeSlot = async (req, res) => {
 const checkIfTimeSlotIsRescheduled = async (id) => {
   const rescheduleModule = await TimeTableSlot.findById(id);
 
-  return rescheduleModule.slot_type === "reschaduled";
+  return rescheduleModule.slot_type === "rescheduled";
 };
 // const checkTimeSlotConflict = async (date, startTime, endTime, hall) => {
 //   const timeSlots = await TimeTableSlot.find({
@@ -384,7 +384,7 @@ const getRescheduleModules = async (req, res) => {
         req.user.academicYear
       );
       const timeSlots = await TimeTableSlot.find({
-        slot_type: { $in: ["reschaduled", "cancelled", "extra"] },
+        slot_type: { $in: ["rescheduled", "cancelled", "extra"] },
       })
         .populate({
           path: "module",
@@ -418,7 +418,7 @@ const getRescheduleModules = async (req, res) => {
     }
     if (req.user.role === "lecturer") {
       const timeSlots = await TimeTableSlot.find({
-        slot_type: { $in: ["reschaduled", "cancelled", "extra"] },
+        slot_type: { $in: ["rescheduled", "cancelled", "extra"] },
         lecturer: req.user.id,
       })
         .populate({

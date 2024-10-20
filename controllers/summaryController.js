@@ -5,7 +5,7 @@ const getLecturerSummary = async (lecturerId) => {
     {
       $match: {
         lecturer: lecturerId,
-        slot_type: { $in: ["reschaduled", "cancelled", "ordinary"] },
+        slot_type: { $in: ["rescheduled", "cancelled", "ordinary"] },
       },
     },
     {

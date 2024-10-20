@@ -20,7 +20,7 @@ const TimeTableSlotSchema = new mongoose.Schema({
   hall: { type: mongoose.Types.ObjectId, ref: "LectureHall", required: true },
   slot_type: {
     type: String,
-    enum: ["reschaduled", "cancelled", "ordinary", "extra"],
+    enum: ["rescheduled", "cancelled", "ordinary", "extra"],
     default: "ordinary",
     required: true,
   },
