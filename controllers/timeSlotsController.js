@@ -8,10 +8,13 @@ const {
 
 const {
   sendRescheduleNotificationToStudents,
-  sendCancellationNotificationToStudents,
   sendNotificationToLecturer,
 } = require("./notificationsController");
-const { populate } = require("../models/userModel");
+const {
+  sendCancelRequestNotifcationToAdmin,
+  sendRescheduleRequestNotifcationToAdmin,
+  sendExtraRequestNotifcationToAdmin,
+} = require("../utils/services/requestNotification");
 
 const getTodayTimeSlots = async (req, res) => {
   try {
@@ -23,6 +26,7 @@ const getTodayTimeSlots = async (req, res) => {
       );
       const timeSlots = await TimeTableSlot.find({
         date: todayDate,
+        slotStatus: "approved",
       })
         .populate({
           path: "module",
@@ -55,6 +59,7 @@ const getTodayTimeSlots = async (req, res) => {
       const timeSlots = await TimeTableSlot.find({
         date: todayDate,
         lecturer: req.user.id,
+        slotStatus: "approved",
       })
         .populate({
           path: "module",
@@ -214,6 +219,10 @@ const rescheduleTimeSlot = async (req, res) => {
       time_slot: timeSlot._id,
     });
     await newRescheduleModule.save();
+    sendRescheduleRequestNotifcationToAdmin({
+      timeSlotId: timeSlot._id,
+      userId: req.user.id,
+    });
 
     res.status(200).json({ message: "Time slot rescheduled successfully" });
   } catch (error) {
@@ -245,7 +254,10 @@ const cancelTimeSlot = async (req, res) => {
     timeSlot.slot_type = "cancelled";
     timeSlot.slotStatus = "pending";
     await timeSlot.save();
-    await sendCancellationNotificationToStudents(timeSlot.module.toString());
+    sendCancelRequestNotifcationToAdmin({
+      timeSlotId: timeSlot._id,
+      userId: req.user.id,
+    });
     res.status(200).json({ message: "Time slot cancelled successfully" });
   } catch (error) {
     console.error(error);
@@ -316,6 +328,7 @@ const getSelectedDateTimeSlots = async (req, res) => {
       );
       const timeSlots = await TimeTableSlot.find({
         date: date,
+        slotStatus: "approved",
       })
         .populate({
           path: "module",
@@ -348,6 +361,7 @@ const getSelectedDateTimeSlots = async (req, res) => {
       const timeSlots = await TimeTableSlot.find({
         date: date,
         lecturer: req.user.id,
+        slotStatus: "approved",
       })
         .populate({
           path: "module",
@@ -385,6 +399,7 @@ const getRescheduleModules = async (req, res) => {
       );
       const timeSlots = await TimeTableSlot.find({
         slot_type: { $in: ["rescheduled", "cancelled", "extra"] },
+        slotStatus: "approved",
       })
         .populate({
           path: "module",
@@ -419,6 +434,7 @@ const getRescheduleModules = async (req, res) => {
     if (req.user.role === "lecturer") {
       const timeSlots = await TimeTableSlot.find({
         slot_type: { $in: ["rescheduled", "cancelled", "extra"] },
+        slotStatus: "approved",
         lecturer: req.user.id,
       })
         .populate({
@@ -465,6 +481,10 @@ const addExtraLecture = async (req, res) => {
       slot_type: "extra",
     });
     await newTimeSlot.save();
+    sendExtraRequestNotifcationToAdmin({
+      timeSlotId: newTimeSlot._id,
+      userId: req.user.id,
+    });
 
     res.status(201).json({ message: "Extra lecture added successfully" });
   } catch (error) {
@@ -539,19 +559,6 @@ const confirmRescheduleOrCancellation = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-const rejectRescheduleOrCancellation = async (req, res) => {
-  try {
-    const { id } = req.body;
-    const timeSlot = await TimeTableSlot.findById(id);
-    timeSlot.slotStatus = "rejected";
-    await timeSlot.save();
-
-    res.status(200).json({ message: "Time slot status updated successfully" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
 
 const getRangeTimeSlots = async (req, res) => {
   try {
@@ -561,6 +568,7 @@ const getRangeTimeSlots = async (req, res) => {
       lecturer: req.user.id,
 
       slot_type: { $ne: "cancelled" },
+      slotStatus: "approved",
     })
       .populate({
         path: "module",

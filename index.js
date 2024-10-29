@@ -6,24 +6,6 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 const verifyToken = require("./middlewares/verifyToken");
-const admin = require("firebase-admin");
-const { initializeApp } = require("firebase-admin/app");
-
-initializeApp({
-  credential: admin.credential.cert({
-    type: process.env.FIREBASE_TYPE,
-    project_id: process.env.FIREBASE_PROJECT_ID,
-    private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
-    private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
-    client_email: process.env.FIREBASE_CLIENT_EMAIL,
-    client_id: process.env.FIREBASE_CLIENT_ID,
-    auth_uri: process.env.FIREBASE_AUTH_URI,
-    token_uri: process.env.FIREBASE_TOKEN_URI,
-    auth_provider_x509_cert_url:
-      process.env.FIREBASE_AUTH_PROVIDER_X509_CERT_URL,
-    client_x509_cert_url: process.env.FIREBASE_CLIENT_X509_CERT_URL,
-  }),
-});
 
 const app = express();
 // app.set("trust proxy", true);
@@ -74,6 +56,16 @@ app.use(
   require("./routes/notificationsRoutes")
 );
 app.use("/api/v1/summary", verifyToken, require("./routes/summaryRoutes"));
+app.use(
+  "/api/v1/system-status",
+  verifyToken,
+  require("./routes/systemStatusRoute")
+);
+app.use(
+  "/api/v1/request-notification",
+  verifyToken,
+  require("./routes/requestNotificationRoutes")
+);
 
 // test route
 app.get("/", (req, res) => {
@@ -83,3 +75,5 @@ app.get("/", (req, res) => {
 app.listen(process.env.PORT || 3000, () =>
   console.log(`Server Listening on port`)
 );
+
+module.exports = app;

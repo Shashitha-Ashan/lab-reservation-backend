@@ -28,7 +28,7 @@ const TimeTableSlotSchema = new mongoose.Schema({
     type: String,
     enum: ["pending", "approved", "rejected"],
     default: function () {
-      return this.slot_type === "ordinary" ? "approved" : "pending"; // not sure about this yet
+      return this.slot_type === "ordinary" ? "approved" : "pending";
     },
     required: true,
   },

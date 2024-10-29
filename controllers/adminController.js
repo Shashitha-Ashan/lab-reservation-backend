@@ -2,6 +2,16 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const Admin = require("../models/adminUserModel");
 const UserModel = require("../models/userModel");
+const TimeTableSlot = require("../models/timeTableSlotModel");
+
+const {
+  sendNotificationToAll,
+  sendNotificationByStudentFocusArea,
+  sendNotificationByStudentYear,
+  sendNotificationToAllLecturers,
+  sendNotificationToAllStudents,
+  sendNotificationToIndividual,
+} = require("../utils/services/notificationService");
 
 const login = async (req, res) => {
   try {
@@ -110,6 +120,72 @@ const removeStudentBatch = async (req, res) => {
   }
 };
 
+const rejectRescheduleOrCancellation = async (req, res) => {
+  try {
+    const { id } = req.body;
+    const timeSlot = await TimeTableSlot.findById(id);
+    timeSlot.slotStatus = "rejected";
+    await timeSlot.save();
+    const userId = timeSlot.lecturer;
+    rejectRescheduleOrCancellationNotificationRequest(userId);
+
+    res.status(200).json({ message: "Time slot status updated successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+const approveRescheduleOrCancellation = async (req, res) => {
+  try {
+    const { id } = req.body;
+    const timeSlot = await TimeTableSlot.findById(id);
+    timeSlot.slotStatus = "approved";
+    await timeSlot.save();
+
+    const year = timeSlot.populate("module").year;
+    const userId = timeSlot.lecturer;
+    await approveRescheduleOrCancellationNotificationRequest(userId);
+    if (timeSlot.slot_type === "cancelled") {
+      await cancellationNotificationRequest(year);
+    } else {
+      await rescheduleNotificationRequest(year);
+    }
+
+    res.status(200).json({ message: "Time slot status updated successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const cancellationNotificationRequest = async (year) => {
+  const title = "Cancellation Notification";
+  const body = `The module has been cancelled on ${timeSlot.date} from ${timeSlot.start_time} to ${timeSlot.end_time}`;
+  await sendNotificationByStudentYear(title, body, year);
+};
+const rescheduleNotificationRequest = async (year) => {
+  const title = "Reschedule Notification";
+  const body = `The module has been rescheduled on ${timeSlot.date} from ${timeSlot.start_time} to ${timeSlot.end_time}`;
+  await sendNotificationByStudentYear(title, body, year);
+};
+const rejectRescheduleOrCancellationNotificationRequest = async (userId) => {
+  const title = "Reschedule/Cancellation Notification";
+  const body = `The reschedule/cancellation request has been rejected for the module on ${timeSlot.date} from ${timeSlot.start_time} to ${timeSlot.end_time}`;
+  await sendNotificationToIndividual(title, body, userId);
+};
+const approveRescheduleOrCancellationNotificationRequest = async (userId) => {
+  const title = "Reschedule/Cancellation Notification";
+  const body = `The reschedule/cancellation request has been approved for the module on ${timeSlot.date} from ${timeSlot.start_time} to ${timeSlot.end_time}`;
+  await sendNotificationToIndividual(title, body, userId);
+};
+const getAllAdminUsers = async (req, res) => {
+  try {
+    const admin = await Admin.find();
+    res.status(200).json(admin);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 module.exports = {
   login,
   addAdmin,
@@ -117,4 +193,7 @@ module.exports = {
   getUsercredintials,
   selfRegister,
   removeStudentBatch,
+  rejectRescheduleOrCancellation,
+  approveRescheduleOrCancellation,
+  getAllAdminUsers,
 };

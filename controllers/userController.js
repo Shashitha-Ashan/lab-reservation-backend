@@ -1,4 +1,5 @@
 const User = require("../models/userModel");
+const SystemStatus = require("../models/systemStatusModel");
 const bcrypt = require("bcrypt");
 const { sendConfirmationEmail } = require("../utils/services/emailService");
 
@@ -50,9 +51,17 @@ const register = async (req, res) => {
 // Login function
 const login = async (req, res) => {
   try {
+    const systemStatus = await SystemStatus.findOne();
+    if (systemStatus.isUpdating) {
+      return res.status(400).json({ message: "System is updating" });
+    }
     const { email, password } = req.body;
     const user = await User.findOne({ uniEmail: email });
-
+    if (!email || !password) {
+      return res
+        .status(401)
+        .json({ message: "Email and password are required" });
+    }
     if (!user) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
@@ -94,6 +103,11 @@ const updateProfile = async (req, res) => {
 const getUsercredintials = async (req, res) => {
   try {
     const user = await User.findOne({ _id: req.user.id });
+    const systemStatus = await SystemStatus.findOne();
+
+    if (systemStatus.isUpdating) {
+      return res.status(400).json({ message: "System is updating" });
+    }
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });

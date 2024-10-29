@@ -1,6 +1,16 @@
 const User = require("../models/userModel");
 const Module = require("../models/moduleModel");
 const DeviceId = require("../models/deviceIdsModel");
+const axios = require("axios");
+
+const api = axios.create({
+  baseURL: process.env.NOTIFICATION_URL,
+  // headers: {
+  //   "Content-Type": "application/json",
+  //   Authorization: `key=${process.env.FCM_SERVER_KEY}`,
+  // },
+});
+
 const {
   sendBulkNotification,
   sendIndividualNotification,
@@ -115,4 +125,5 @@ module.exports = {
   sendNotificationToStudents,
   sendNotificationToLectures,
   sendNotificationToLecturer,
+  sendCancellationNotificationToLectures,
 };
