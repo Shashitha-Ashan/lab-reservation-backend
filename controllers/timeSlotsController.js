@@ -251,9 +251,10 @@ const cancelTimeSlot = async (req, res) => {
     if (timeSlot.slot_type === "cancelled") {
       return res.status(400).json({ message: "Time slot already cancelled" });
     }
-    timeSlot.slot_type = "cancelled";
-    timeSlot.slotStatus = "pending";
-    await timeSlot.save();
+    await TimeTableSlot.findOneAndUpdate(
+      { _id: id },
+      { slot_type: "cancelled", slotStatus: "pending" }
+    );
     sendCancelRequestNotifcationToAdmin({
       timeSlotId: timeSlot._id,
       userId: req.user.id,
