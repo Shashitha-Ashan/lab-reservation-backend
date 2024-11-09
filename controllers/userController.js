@@ -53,7 +53,7 @@ const login = async (req, res) => {
   try {
     const systemStatus = await SystemStatus.findOne();
     if (systemStatus.isUpdating) {
-      return res.status(400).json({ message: "System is updating" });
+      return res.status(503).json({ message: "System is updating" });
     }
     const { email, password } = req.body;
     const user = await User.findOne({ uniEmail: email });
@@ -106,7 +106,7 @@ const getUsercredintials = async (req, res) => {
     const systemStatus = await SystemStatus.findOne();
 
     if (systemStatus.isUpdating) {
-      return res.status(400).json({ message: "System is updating" });
+      return res.status(503).json({ message: "System is updating" });
     }
 
     if (!user) {

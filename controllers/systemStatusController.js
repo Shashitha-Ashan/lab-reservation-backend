@@ -3,7 +3,15 @@ const SystemStatus = require("../models/systemStatusModel");
 const getSystemStatus = async (req, res) => {
   try {
     const systemStatus = await SystemStatus.findOne();
-    res.status(200).json({ systemStatus });
+    if (systemStatus === null) {
+      const newSystemStatus = new SystemStatus();
+      await newSystemStatus.save();
+      return res.status(200).json({ systemStatus: newSystemStatus });
+    }
+    if (systemStatus.isUpdating) {
+      return res.status(503).json({ message: "System is currently updating" });
+    }
+    res.status(200).json({ message: "system is working" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
